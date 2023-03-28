@@ -65,7 +65,7 @@ setup creates the canvas and calls MQTT setup stuff
 */
 function setup() {
     createCanvas(1500, 800);
-    background(10);
+    background(240);
 
     MQTTsetup(); // Setup the MQTT client
 
@@ -83,13 +83,13 @@ function setup() {
 Description of draw()
 */
 function draw() {
-    if (state === `seedID`) {
+    if (state == `seedID`) {
         seedID();
-      } else if (state === `growthPhase00`) {
+      } else if (state == `growthPhase00`) {
         growthPhase00();
-      } else if (state === `growthPhase01`) {
+      } else if (state == `growthPhase01`) {
         growthPhase01();
-      } else if (state === `growthPhase02`) {
+      } else if (state == `growthPhase02`) {
         growthPhase02();
       } 
     }

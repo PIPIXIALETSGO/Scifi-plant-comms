@@ -9,8 +9,19 @@ This is the plant interface of the Scifi Plant Comms 2player cooperative game.
 
 let state = 'seedID' // possible states are 'seedID', 'growthPhase00', 'growthPhase01', 'growthPhase02'
 
+// seed variables:
 let seeds = [];
 let seedNum = 3;
+let seed;
+
+//Plant phase variables:
+let plantPhase0;
+let plantPhase1;
+let plantPhase2;
+
+let plantPhase0_IMG;
+let plantPhase1_IMG;
+let plantPhase2_IMG;
 
 // MQTT implementation variables:
 let myName = "leo"; // Who are you? Make sure it matches the previous person's variable! 
@@ -38,10 +49,14 @@ let topic = 'CART253'; // This is the topic we are all subscribed to
 Preload loads image assets.
 */
 function preload() {
-    for (let i = 0; i < seedNum; i++) {
+  for (let i = 0; i < seedNum; i++) {
         let seedImage = loadImage(`assets/images/seed${i}.png`);
         seeds.push(seedImage);
-      }
+    }
+  
+  plantPhase0_IMG = loadImage('assets/images/plantPhase0.png');
+  plantPhase1_IMG = loadImage('assets/images/plantPhase1.png');
+  plantPhase2_IMG = loadImage('assets/images/plantPhase2.png');
 }
 
 
@@ -54,10 +69,13 @@ function setup() {
 
     MQTTsetup(); // Setup the MQTT client
 
-    //create a new seed object
-    for (let i =0; i < seeds.length; i++ ){
-        seeds[i] = new Seed(width/2, height/2, random(seeds));
-    }
+    //create seed object
+        seed = new Seed(width/2, height/2, random(seeds));
+
+    plantPhase0 = new PlantPhase(width/2, height/2, plantPhase0_IMG);
+    plantPhase1 = new PlantPhase(width/2, height/2, plantPhase1_IMG);
+    plantPhase2 = new PlantPhase(width/2, height/2, plantPhase2_IMG);
+
 }
 
 
@@ -77,23 +95,20 @@ function draw() {
     }
 
 function seedID() {
- // display a seed.
- for (let i =0; i < seeds.length; i++ ){
-     seeds[i].display();
- }
-
+  // display a seed:
+     seed.display();
 };
 
 function growthPhase00() {
-
+  plantPhase0.display();
 };
 
 function growthPhase01() {
-
+  plantPhase1.display();
 };
 
 function growthPhase02() {
-
+  plantPhase2.display();
 };
 
 /**
@@ -114,11 +129,38 @@ class Seed {
     }
 }
 
-
+/**
+ Plant Phase class:
+ */
+class PlantPhase {
+  constructor (x, y, image) {
+      this.x = x;
+      this.y = y;
+      this.image = image;
+  }
+  
+  display() {
+      push();
+      imageMode(CENTER);
+      image(this.image, this.x, this.y, width, height);
+      pop();
+  }
+}
 
 function mousePressed(){ 
     // Sends a message on mouse pressed to test. You can use sendMQTTMessage(msg) at any time, it doesn't have to be on mouse pressed. 
-    sendMQTTMessage(mouseX, mouseY); // This function takes 1 parameter, here I used a random number between 0 and 255 and constrained it to an integer. You can use anything you want.
+    // sendMQTTMessage(mouseX, mouseY); // This function takes 1 parameter, here I used a random number between 0 and 255 and constrained it to an integer. You can use anything you want.
+
+    if (state === `seedID`) {
+      state = 'growthPhase00';
+    } else if (state === `growthPhase00`) {
+      state = 'growthPhase01';
+    } else if (state === `growthPhase01`) {
+      state = 'growthPhase02';
+    } else if (state === `growthPhase02`) {
+      state = 'seedID';
+    } 
+
   }
 
   // When a message arrives, do this: 

@@ -4,8 +4,6 @@ Leonardo Morales
 
 This is the plant interface of the Scifi Plant Comms 2player cooperative game.
 */
- 
-"use strict";
 
 let state = 'seedID' // possible states are 'seedID', 'growthPhase00', 'growthPhase01', 'growthPhase02'
 
@@ -23,6 +21,8 @@ let plantPhase0_IMG;
 let plantPhase1_IMG;
 let plantPhase2_IMG;
 
+let currentSeed;
+let p=1
 // MQTT implementation variables:
 let myName = "leo"; // Who are you? Make sure it matches the previous person's variable! 
 let nextName = "jw"; // Who is next on the list? Make sure it matches the next person's variable!
@@ -59,30 +59,24 @@ function preload() {
   plantPhase2_IMG = loadImage('assets/images/plantPhase2.png');
 }
 
-
-/**
-setup creates the canvas and calls MQTT setup stuff
-*/
 function setup() {
-    createCanvas(1500, 800);
-    
-    MQTTsetup(); // Setup the MQTT client
+  // Normal program setup goes here
+  createCanvas(1500, 800);
 
-    //create seed object
-        seed = new Seed(width/2, height/2, random(seeds));
+  MQTTsetup(); // Setup the MQTT client
 
-    plantPhase0 = new PlantPhase(width/2, height/2, plantPhase0_IMG);
-    plantPhase1 = new PlantPhase(width/2, height/2, plantPhase1_IMG);
-    plantPhase2 = new PlantPhase(width/2, height/2, plantPhase2_IMG);
+  //create seed object
+  currentSeed = round(random(0,2));
+  console.log(currentSeed);
+  seed = new Seed(width/2, height/2, seeds[currentSeed]);
 
+  plantPhase0 = new PlantPhase(width/2, height/2, plantPhase0_IMG);
+  plantPhase1 = new PlantPhase(width/2, height/2, plantPhase1_IMG);
+  plantPhase2 = new PlantPhase(width/2, height/2, plantPhase2_IMG);
 }
 
-
-/**
-Description of draw()
-*/
 function draw() {
-    background(240);
+  background(240);
     if (state === `seedID`) {
         seedID();
       } else if (state === `growthPhase00`) {
@@ -92,7 +86,7 @@ function draw() {
       } else if (state === `growthPhase02`) {
         growthPhase02();
       } 
-    }
+}
 
 function seedID() {
   // display a seed:
@@ -115,77 +109,84 @@ function growthPhase02() {
 Seed class:
 */
 class Seed {
-    constructor (x, y, shape) {
-        this.x = x;
-        this.y = y;
-        this.shape = shape;
-    }
-    
-    display() {
-        push();
-        imageMode(CENTER);
-        image(this.shape, this.x, this.y, width, height);
-        pop();
-    }
-}
-
-/**
- Plant Phase class:
- */
-class PlantPhase {
-  constructor (x, y, image) {
+  constructor (x, y, shape) {
       this.x = x;
       this.y = y;
-      this.image = image;
+      this.shape = shape;
   }
   
   display() {
       push();
       imageMode(CENTER);
-      image(this.image, this.x, this.y, width, height);
+      image(this.shape, this.x, this.y, width, height);
       pop();
   }
-  
+}
+
+/**
+Plant Phase class:
+*/
+class PlantPhase {
+constructor (x, y, image) {
+    this.x = x;
+    this.y = y;
+    this.image = image;
+}
+
+display() {
+    push();
+    imageMode(CENTER);
+    image(this.image, this.x, this.y, width, height);
+    pop();
+}
+
 }
 
 function mousePressed(){ 
-    // Sends a message on mouse pressed to test. You can use sendMQTTMessage(msg) at any time, it doesn't have to be on mouse pressed. 
-    sendMQTTMessage('water!'); // This function takes 1 parameter, here I used a random number between 0 and 255 and constrained it to an integer. You can use anything you want.
+  // Sends a message on mouse pressed to test. You can use sendMQTTMessage(msg) at any time, it doesn't have to be on mouse pressed. 
+  // sendMQTTMessage(mouseX, mouseY); // This function takes 1 parameter, here I used a random number between 0 and 255 and constrained it to an integer. You can use anything you want.
 
-    if (state === `seedID`) {
-      state = 'growthPhase00';
-    } else if (state === `growthPhase00`) {
-      state = 'growthPhase01';
-    } else if (state === `growthPhase01`) {
-      state = 'growthPhase02';
-    } else if (state === `growthPhase02`) {
-      state = 'seedID';
-    } 
+  if (state === `seedID`) {
+    sendMQTTMessage('guess', currentSeed);
 
-  }
+    // state = 'growthPhase00';
+  } else if (state === `growthPhase00`) {
+    sendMQTTMessage('water');
 
-  // When a message arrives, do this: 
+    // state = 'growthPhase01';
+  } else if (state === `growthPhase01`) {
+    
+    sendMQTTMessage('water');
+  } else if (state === `growthPhase02`) {
+    state = 'seedID';
+  } 
+
+}
+
+// When a message arrives, do this: 
 function onMessageArrived(message) {
   let dataReceive = split(trim(message.payloadString), "/");// Split the incoming message into an array deliniated by "/"
   console.log("Message Received:");
-  console.log(String(dataReceive[1])); 
+  console.log(dataReceive)
+  // console.log(String(dataReceive[1])); 
 // 0 is who its from
 // 1 is who its for
 // 2 is the data
   if(dataReceive[1] == myName){ // Check if its for me
-    console.log("Its for me! :) ");
-    console.log(dataReceive[2]);
-    console.log(dataReceive[3]);
-  } else {
-    console.log("Not for me! :( ");
-  }
-  if(int(dataReceive[3]) > 10){ 
-    console.log("yes!");
-  } else { 
-    console.log("nope");
-  }
-}
+    if (dataReceive[2] == 'guessComplete') {
+      state = 'growthPhase00';
+    } else if (dataReceive[2] == 'pipeComplete') {
+      state = 'growthPhase0'+p;
+      p++
+      // console.log(1)
+    } 
 
+   else {
+    // console.log("Not for me! :( ");
+  }
+
+}
+}
 // Sending a message
 function sendMQTTMessage(msg, msg2) {
       message = new Paho.MQTT.Message(myName + "/" + nextName+"/"+msg + "/"+msg2); // add messages together: 

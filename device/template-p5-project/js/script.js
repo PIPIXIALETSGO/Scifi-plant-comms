@@ -2,15 +2,21 @@ var x = 0;
 var y = 0;
 var angle = 0;
 var pipes = [];
-var numOfPipes = 4;
+var numOfPipes = 11;
 var xCor = 500;
 var yCor = 250;
 var randomAngle = [0, 90, 180, 270];
 var isPipeGame = true;
 var isGuessGame = false;
+var rX = 0;
+var rY = 0;
+const FRAME_RATE = 30;
+var hint = false;
+var hintAlpha = 255;
 ////////// guess game
 var img, img2, img3, fontRegular;
-var countDown = 0;
+var countDown = 20;
+var stepsCount = 10;
 var selectedImg = 1;
 var buttonAlpha = 100;
 var targetSeed;
@@ -34,31 +40,41 @@ let creds = {
 };
 let topic = "CART253";
 let myName = "jw";
-let nextName = "leo";
+let nextName = "kk";
 ////////////////////////////////
 var winCon1 = [
-  { position: 1, angle: 180, isMatched: 0 },
-  { position: 2, angle: 0, isMatched: 0 },
-  { position: 3, angle: 90, isMatched: 0 },
-];
-var winCon2 = [
-  { position: 2, angle: 180, isMatched: 0 },
-  { position: 3, angle: 90, isMatched: 0 },
-  { position: 4, angle: 0, isMatched: 0 },
-];
-var winCon3 = [
+  { position: 0, angle: 270, isMatched: 0 },
   { position: 1, angle: 270, isMatched: 0 },
   { position: 2, angle: 0, isMatched: 0 },
-  { position: 3, angle: 270, isMatched: 0 },
+  { position: 4, angle: 90, isMatched: 0 },
+  { position: 5, angle: 270, isMatched: 0 },
+  { position: 6, angle: 90, isMatched: 0 },
+  { position: 8, angle: 90, isMatched: 0 },
+  { position: 9, angle: 90, isMatched: 0 },
+];
+///0-270,1-180/270,2-0,4-90,5-270,6-90,8-90/270,9-90
+var winCon2 = [
   { position: 4, angle: 270, isMatched: 0 },
-  { position: 5, angle: 90, isMatched: 0 },
-  { position: 6, angle: 180, isMatched: 0 },
-  { position: 7, angle: 90, isMatched: 0 },
+  { position: 5, angle: 0, isMatched: 0 },
+  { position: 6, angle: 0, isMatched: 0 },
+  { position: 8, angle: 90, isMatched: 0 },
+  { position: 9, angle: 180, isMatched: 0 },
+  { position: 10, angle: 90, isMatched: 0 },
+];
+//4-270,5-0,6-0,8-90,9-270,10-90
+var winCon3 = [
+  { position: 0, angle: 270, isMatched: 0 },
+  { position: 1, angle: 0, isMatched: 0 },
+  { position: 2, angle: 270, isMatched: 0 },
+  { position: 3, angle: 270, isMatched: 0 },
+  { position: 4, angle: 90, isMatched: 0 },
+  { position: 5, angle: 180, isMatched: 0 },
+  { position: 6, angle: 90, isMatched: 0 },
 ];
 var mouse = false;
 var level = 1;
-var isLoaded = false; 
-var pattern = [2, 2, 2, 2]; //1=vertical   2=L-shape 3=cross
+var isLoaded = false;
+var pattern = [2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2]; //1=vertical   2=L-shape 3=cross
 function preload() {
   fontRegular = loadFont("assets/digital.ttf");
   img = loadImage("./assets/images/seed0.jpg");
@@ -73,18 +89,23 @@ function setup() {
   imageMode(CENTER);
   rectMode(CENTER);
   if (level === 1) {
-    createPipe(500, 250, 4, 1, pattern);
+    createPipe(300, 200, 11, 1, pattern);
   }
 }
 function onMessageArrived(message) {
   let dataReceive = split(trim(message.payloadString), "/");
-  console.log(dataReceive)
+  // console.log(dataReceive);
   if (dataReceive[1] == myName) {
-    if (dataReceive[2] === "water") {
-      isPipeGame = true;
+    if (dataReceive[2] == "pipe") {
+      var x = parseInt(dataReceive[3]);
+      var y = parseInt(dataReceive[4]);
+      rX = x;
+      rY = y;
+      stepsCount--;
     } else if (dataReceive[2] === "guess") {
-      targetSeed = dataReceive[3];
-      isGuessGame = true;
+      isGuessGame=true
+    } else if (dataReceive[2] === "hint") {
+      hint=true
     }
   }
 }
@@ -117,35 +138,32 @@ function MQTTsetup() {
     useSSL: true,
   });
 }
-function draw() { 
+function draw() {
   background(21, 21, 21);
   fill(255);
   interface();
-  timer();
   valve();
-  if (valveRotate === false && valveTime) {
-    valveArrow();
-  }
   if (isPipeGame) {
-    isGuessGame=false
+    isGuessGame = false;
     pipeGame(level);
     if (level === 2 && isLoaded === false) {
-      numOfPipes = 7;
-      createPipe(450, 250, numOfPipes, 2, [1, 2, 2, 1, 2, 2, 1]);
+      numOfPipes = 12;
+      createPipe(300, 200, numOfPipes, 2, [2, 1, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2]);
       isLoaded = true;
     } else if (level === 3 && isLoaded === false) {
-      console.log("3");
-      numOfPipes = 13;
+      numOfPipes = 11;
       createPipe(
-        250,
-        250,
+        200,
+        200,
         numOfPipes,
         3,
         [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
       );
       isLoaded = true;
     }
-    displayPipe(numOfPipes);
+    timer();
+
+    displayPipe();
     checkWinCon();
     stroke(0);
   }
@@ -183,35 +201,90 @@ function draw() {
 
     timer();
   }
-  fill(0);
-  console.log(selectedImg,parseInt(targetSeed))
+
+  fill(255);
   textSize(25);
   text(mouseX + "," + mouseY, mouseX, mouseY);
+}
+function win(l) {
+  if (l === 1) {
+    push();
+    stroke(255);
+    strokeWeight(25);
+    noFill();
+    animS.shape("l1", FRAME_RATE * 3, [
+      [200, 300],
+      [300, 300],
+      [300, 200],
+      [400, 200],
+      [500, 200],
+      [500, 300],
+      [400, 300],
+      [400, 400],
+      [300, 400],
+      [200, 400],
+    ]);
+    pop();
+  } else if (l === 2) {
+    push();
+    stroke(0, 0, 255);
+    strokeWeight(25);
+    noFill();
+    animS.shape("l2", FRAME_RATE * 3, [
+      [500, 220],
+      [500, 400],
+      [400, 400],
+      [400, 300],
+      [300, 300],
+      [300, 400],
+      [250, 400],
+    ]);
+    pop();
+  } else if (l === 3) {
+    push();
+    stroke(255);
+    strokeWeight(25);
+    noFill();
+    animS.shape("l3", FRAME_RATE * 3, [
+      [600, 200],
+      [500, 200],
+      [500, 300],
+      [400, 300],
+      [400, 200],
+      [300, 200],
+      [300, 300],
+      [200, 300],
+      [200, 400],
+    ]);
+    pop();
+  }
 }
 function timer() {
   push();
   noStroke();
   fill(0, 100);
   rect(1000, 120, 210, 80);
-  fill(255, 0, 0, 8);
+  fill(255, 0, 0);
   textSize(100);
   textFont(fontRegular);
-  text(8888, 900, 150);
-  if (isGuessGame || isPipeGame) {
-    text(countDown, 1023, 150);
+  // text(8888, 900, 150);
+  if (isPipeGame) {
+    text(stepsCount, 1023, 150);
   }
-
+  if(isGuessGame){
+    text(countDown, 1023, 150);
+ if (frameCount % 60 == 0 && countDown > 0) {
+    countDown--;
+  }
+  if (countDown === 0) {
+    // text("Game Over", width / 2, height / 2);
+    if (mouse) {
+      countDown = 10;
+    }
+  }
+  }
   // text("countDown", width / 2, 100);
-
-  // if (frameCount % 60 == 0 && countDown > 0) {
-  //   countDown--;
-  // }
-  // if (countDown === 0) {
-  //   // text("Game Over", width / 2, height / 2);
-  //   if (mouse) {
-  //     countDown = 10;
-  //   }
-  // }
+ 
   pop();
 }
 function interfaceAlpha() {
@@ -230,14 +303,14 @@ function interface() {
   push();
   // fill(21, 21, 21);
   fill(0);
-  strokeWeight(15);
+  // strokeWeight(15);
   stroke(255, 100);
-  rect(450, 350, 750, 500, 3);
+  rect(400, 250, 700, 400, 3);
   strokeWeight(0);
   fill(0);
-  rect(450, 350, 748, 490, 15);
+  // rect(450, 350, 748, 390, 15);
   pop();
-  led();
+  // led();
   interfaceAlpha();
   leftButton();
   middleButton();
@@ -252,7 +325,7 @@ function led() {
 }
 function leftButton() {
   if (isGuessGame) {
-    var d = dist(mouseX, mouseY, 990, 580);
+    var d = dist(mouseX, mouseY, 80, 580);
     if (d < 75 && mouse) {
       if (selectedImg < 0) {
         selectedImg = 0;
@@ -264,43 +337,42 @@ function leftButton() {
   push();
   noStroke();
   fill(200, 15, 0, buttonAlpha);
-  ellipse(990, 580, 150, 150);
+  ellipse(90, 580, 150, 150);
   stroke(255, 0, 0, buttonAlpha);
   noFill();
   strokeWeight(10);
-  ellipse(990, 580, 140, 140);
+  ellipse(90, 580, 140, 140);
   fill(0, buttonAlpha);
   strokeWeight(30);
   stroke(0, buttonAlpha);
-  text("<", 980, 590);
+  text("<", 80, 590);
   pop();
 }
 function middleButton() {
   var d = dist(mouseX, mouseY, 1190, 580);
   if (d < 75 && mouse) {
-    
-      if (selectedImg ===parseInt(targetSeed)) {
-        sendMQTTMessage("guessComplete");
-      
+    if (selectedImg === parseInt(targetSeed)) {
+      sendMQTTMessage("guessComplete");
     }
   }
   push();
   noStroke();
   fill(200, 15, 0, buttonAlpha);
-  ellipse(1190, 580, 150, 150);
+  ellipse(290, 580, 150, 150);
   stroke(255, 0, 0, buttonAlpha);
   noFill();
   strokeWeight(10);
-  ellipse(1190, 580, 140, 140);
+  ellipse(290, 580, 140, 140);
   fill(0, buttonAlpha);
   strokeWeight(2);
   stroke(0, buttonAlpha);
   textSize(50);
-  text("OK", 1150, 600);
+  text("OK", 250, 600);
   pop();
 }
 function rightButton() {
-  var d = dist(mouseX, mouseY, 1390, 580);
+  if(isGuessGame){
+  var d = dist(mouseX, mouseY, 490, 580);
   if (d < 75 && mouse) {
     if (selectedImg > 2) {
       selectedImg = 2;
@@ -308,18 +380,20 @@ function rightButton() {
       selectedImg++;
     }
   }
+}
+
   push();
   noStroke();
   fill(200, 15, 0, buttonAlpha);
-  ellipse(1390, 580, 150, 150);
+  ellipse(490, 580, 150, 150);
   stroke(255, 0, 0, buttonAlpha);
   noFill();
   strokeWeight(10);
-  ellipse(1390, 580, 140, 140);
+  ellipse(490, 580, 140, 140);
   fill(0, buttonAlpha);
   strokeWeight(30);
   stroke(0, buttonAlpha);
-  text(">", 1380, 590);
+  text(">", 480, 590);
   pop();
 }
 function valve() {
@@ -347,7 +421,7 @@ function valve() {
           level = 3;
         }
         reset();
-        sendMQTTMessage("pipeComplete");  //['jw','leo','water']
+        sendMQTTMessage("pipeComplete"); //['jw','leo','water']
       }
       rotate(angle);
     }
@@ -370,28 +444,11 @@ function valve() {
   line(0, 0, -50, 110);
   pop();
 }
-function valveArrow() {
-  push();
-  noStroke();
-  translate(1170, 125);
-  rotate(30);
-  fill(255, 0, 0, arrowAlpha);
-  if (blink) {
-    arrowAlpha += 5;
-    if (arrowAlpha > 255) blink = false;
-  }
-  if (blink === false) {
-    arrowAlpha -= 5;
-    if (arrowAlpha < 0) blink = true;
-  }
-  rect(0, 0, 120, 10);
-  triangle(60, 15, 60, -15, 75, 0);
-  pop();
-}
-function displayPipe(numOfPipes) {
+
+function displayPipe() {
   for (var ii = 0; ii < numOfPipes; ii++) {
+    pipes[ii].rotation(rX, rY);
     pipes[ii].display();
-    pipes[ii].rotation();
   }
 }
 function mouseClicked() {
@@ -400,13 +457,13 @@ function mouseClicked() {
 function createPipe(xCor, yCor, n, l, pattern) {
   if (l === 1) {
     for (var ii = 0; ii < n; ii++) {
-      if (ii === 1) {
-        xCor = 400;
+      if (ii === 4) {
+        xCor = 300;
         yCor += 100;
       }
-      if (ii === 3) {
+      if (ii === 8) {
+        xCor = 300;
         yCor += 100;
-        xCor = 500;
       }
       pipes[ii] = new pipeBlocks(xCor, yCor, pattern[ii]);
       xCor += 100;
@@ -414,10 +471,12 @@ function createPipe(xCor, yCor, n, l, pattern) {
   } else if (l === 2) {
     for (var ii = 0; ii < n; ii++) {
       if (ii === 2) {
-        xCor = 350;
+        xCor = 600;
+      } else if (ii === 3) {
+        xCor = 200;
         yCor += 100;
-      } else if (ii === 5) {
-        xCor = 350;
+      } else if (ii === 8) {
+        xCor = 300;
         yCor += 100;
       }
       pipes[ii] = new pipeBlocks(xCor, yCor, pattern[ii]);
@@ -425,11 +484,14 @@ function createPipe(xCor, yCor, n, l, pattern) {
     }
   } else if (l === 3) {
     for (var ii = 0; ii < n; ii++) {
-      if (ii === 4) {
-        xCor = 250;
+      if (ii === 0) {
+        xCor += 100;
+      }
+      if (ii === 3) {
+        xCor = 200;
         yCor += 100;
-      } else if (ii === 9) {
-        xCor = 350;
+      } else if (ii === 8) {
+        xCor = 300;
         yCor += 100;
       }
       pipes[ii] = new pipeBlocks(xCor, yCor, pattern[ii]);
@@ -440,6 +502,7 @@ function createPipe(xCor, yCor, n, l, pattern) {
 function reset() {
   mouse = false;
   isLoaded = false;
+  hint=false
   pipes = [];
 }
 function checkWinCon() {
@@ -453,12 +516,12 @@ function checkWinCon() {
         total += winCon1[jj].isMatched;
       }
     }
-    if (total === 3) {
+    if (total === 8) {
       valveTime = true;
+      win(1);
       isLoaded = false;
     }
   } else if (level === 2) {
-    console.log(total);
     for (var jj = 0; jj < winCon2.length; jj++) {
       var position = winCon2[jj].position;
       var angle = winCon2[jj].angle;
@@ -467,8 +530,9 @@ function checkWinCon() {
         total += winCon2[jj].isMatched;
       }
     }
-    if (total === 3) {
+    if (total === 6) {
       valveTime = true;
+      win(2);
     }
   } else if (level === 3) {
     for (var jj = 0; jj < winCon3.length; jj++) {
@@ -481,6 +545,7 @@ function checkWinCon() {
     }
     if (total === 7) {
       valveTime = true;
+      win(3);
     }
   }
 
@@ -490,46 +555,75 @@ function pipeGame(l) {
   textSize(20);
   push();
   fill(255);
-
   noStroke();
   if (l === 1) {
-    rect(450, 350, 200, 300);
-    fill(0, 0, 255);
-    rect(400, 250, 100, 100);
+    // rect(400, 300, 500, 300);
+    if (hint === false) {
+      fill(0, 0, 255);
+      rect(200, 200, 100, 100);
+      rect(600, 400, 100, 100);
+      rect(200, 300, 100, 100);
+    } else {
+      fill(0, 0, 255, hintAlpha);
+      hintAlpha -= 3;
+      rect(200, 200, 100, 100);
+      rect(600, 400, 100, 100);
+      fill(0, 0, 255);
+      rect(200, 300, 100, 100);
+    }
     fill(0);
-    rect(400, 295, 50, 10);
-
-    text("water", 380, 260);
+    // rect(400, 295, 50, 10);
+    text("water", 180, 300);
     fill(0, 255, 0);
-    rect(400, 450, 100, 100);
+    rect(200, 400, 100, 100);
     fill(0);
-    rect(445, 450, 10, 50);
-    text("plant", 380, 460);
+    rect(200, 400, 10, 50);
+    text("plant", 200, 400);
   } else if (l === 2) {
-    rect(450, 350, 300, 300);
-    fill(0, 0, 255);
-    rect(350, 250, 100, 100);
+    rect(400, 300, 500, 300);
+    if (hint === false) {
+      fill(0, 0, 255);
+      rect(200, 200, 100, 100);
+      rect(500, 200, 100, 100);
+    } else {
+      fill(0, 0, 255, hintAlpha);
+      hintAlpha -= 3;
+      rect(200, 200, 100, 100);
+      fill(0, 0, 255);
+      rect(500, 200, 100, 100);
+    }
     fill(0);
-    rect(350, 295, 50, 10);
-    text("water", 330, 260);
+    rect(500, 245, 50, 10);
+    text("water", 480, 210);
     fill(0, 255, 0);
-    rect(550, 450, 100, 100);
+    rect(200, 400, 100, 100);
     fill(0);
-    rect(550, 405, 50, 10);
-
-    text("plant", 530, 460);
+    rect(200, 355, 50, 10);
+    text("plant", 190, 410);
   } else if (l === 3) {
-    rect(450, 350, 500, 300);
-    fill(0, 0, 255);
-    rect(650, 250, 100, 100);
+    // rect(400, 300, 500, 300);
+    if (hint === false) {
+      fill(0, 0, 255);
+      rect(200, 200, 100, 100);
+      rect(600, 400, 100, 100);
+      rect(600, 200, 100, 100);
+    } else {
+      fill(0, 0, 255, hintAlpha);
+      hintAlpha -= 3;
+      rect(200, 200, 100, 100);
+      rect(600, 400, 100, 100);
+      fill(0, 0, 255);
+      rect(600, 200, 100, 100);
+    }
+
     fill(0);
-    rect(605, 250, 10, 50);
-    text("water", 620, 260);
+    rect(555, 200, 10, 50);
+    text("water", 590, 210);
     fill(0, 255, 0);
-    rect(250, 450, 100, 100);
+    rect(200, 400, 100, 100);
     fill(0);
-    rect(250, 405, 50, 10);
-    text("plant", 230, 460);
+    rect(200, 355, 50, 10);
+    text("plant", 180, 410);
   }
   pop();
 }
@@ -545,15 +639,20 @@ class pipeBlocks {
     this.rotate = false;
     this.target = this.angle + 90;
   }
-  rotation() {
+  rotation(x, y) {
     push();
-    if (mouseX < this.toX + 50 && mouseX > this.toX - 50) {
-      if (mouseY < this.toY + 50 && mouseY > this.toY - 50) {
-        if (mouse) {
-          this.rotate = true;
-          mouse = false;
-        }
-      }
+    // if (mouseX < this.toX + 50 && mouseX > this.toX - 50) {
+    //   if (mouseY < this.toY + 50 && mouseY > this.toY - 50) {
+    //     if (mouse) {
+    //       this.rotate = true;
+    //       mouse = false;
+    //     }
+    //   }
+    // }
+    if (this.toX === x - 800 && this.toY === y) {
+      this.rotate = true;
+      rX = 0;
+      rY = 0;
     }
     if (this.rotate) {
       if (this.angle < this.target) {
@@ -596,39 +695,46 @@ class pipeBlocks {
       rect(this.x, this.y + 45, 40, 10);
       pop();
     }
-    if (pattern === 3) {
-      push();
-      fill(99, 98, 94);
-      rect(this.x - 45, this.y, 10, 40);
-      rect(this.x, this.y - 45, 40, 10);
-      fill(184, 181, 173);
-      rect(this.x, this.y, 80, 28);
-      rect(this.x, this.y, 28, 80);
-      fill(99, 98, 94);
-      rect(this.x + 45, this.y, 10, 40);
-      rect(this.x, this.y + 45, 40, 10);
-      pop();
-    }
+    // if (pattern === 3) {
+    //   push();
+    //   fill(99, 98, 94);
+    //   rect(this.x - 45, this.y, 10, 40);
+    //   rect(this.x, this.y - 45, 40, 10);
+    //   fill(184, 181, 173);
+    //   rect(this.x, this.y, 80, 28);
+    //   rect(this.x, this.y, 28, 80);
+    //   fill(99, 98, 94);
+    //   rect(this.x + 45, this.y, 10, 40);
+    //   rect(this.x, this.y + 45, 40, 10);
+    //   pop();
+    // }
     if (pattern === 2) {
       push();
       fill(99, 98, 94);
       rect(this.x - 45, this.y, 10, 40);
       fill(184, 181, 173);
-      rect(this.x - 22.5, this.y, 35, 28);
-      rect(this.x, this.y + 13, 28, 55);
+      rect(this.x - 22.5, this.y, 35, 28, 3);
+      rect(this.x, this.y + 13, 28, 55, 3);
       fill(99, 98, 94);
       rect(this.x, this.y + 45, 40, 10);
       pop();
     }
   }
   checkAngle(targetAngle) {
+    if (this.pattern === 1) {
+      if (targetAngle === 270 || targetAngle === 90) {
+        if (this.angle === 90 || this.angle === 270) return true;
+      } else {
+        if (this.angle === 0 || this.angle === 180) return true;
+      }
+    }
     if (this.angle === targetAngle) {
       return true;
     }
   }
 }
 ///level 1 win con///
-///1-180,2-0,3-90
+///0-270,1-180/270,2-0,4-90,5-270,6-90,8-90/270,9-90
 
 ///level 2 win con///
 ///1-180,2-0,3-90
@@ -637,3 +743,6 @@ class pipeBlocks {
 ///1-270,2-0,3-270,4-270,5-90,6-180,7-90
 
 ///add 3 LED, when message recived, led blinks for 1-2 secs. Then display the screen
+// One player will only be able to see pipes, but can't control and have no ideal where water and plant is
+// Another one will be able turn each pipe and know where it starts and ends
+// whenever mouse is pressed, it will send the x and y coordinates through MQTT to another player,

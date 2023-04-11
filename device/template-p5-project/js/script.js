@@ -2,6 +2,7 @@ var x = 0;
 var y = 0;
 var angle = 0;
 var pipes = [];
+var waterDrop = [];
 var numOfPipes = 11;
 var xCor = 500;
 var yCor = 250;
@@ -14,12 +15,23 @@ const FRAME_RATE = 30;
 var hint = false;
 var hintAlpha = 255;
 ////////// guess game
-var img, img2, img3, fontRegular;
+var img,
+  img2,
+  img3,
+  backgroundImg,
+  device,
+  box,
+  leftb,
+  middleb,
+  rightb,
+  fontRegular;
 var countDown = 20;
 var stepsCount = 10;
 var selectedImg = 1;
 var buttonAlpha = 100;
 var targetSeed;
+var numofDrops = 100;
+var waterTime=false
 ////////////////// valve
 var valveRotate = false;
 var valveAngle = 360;
@@ -80,6 +92,12 @@ function preload() {
   img = loadImage("./assets/images/seed0.jpg");
   img2 = loadImage("./assets/images/seed1.jpg");
   img3 = loadImage("./assets/images/seed2.jpg");
+  backgroundImg = loadImage("./assets/images/BG.png");
+  device = loadImage("./assets/images/console.png");
+  box = loadImage("./assets/images/box.png");
+  leftb = loadImage("./assets/images/left.png");
+  middleb = loadImage("./assets/images/middle.png");
+  rightb = loadImage("./assets/images/right.png");
 }
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -89,7 +107,10 @@ function setup() {
   imageMode(CENTER);
   rectMode(CENTER);
   if (level === 1) {
-    createPipe(300, 200, 11, 1, pattern);
+    createPipe(400, 180, 11, 1, pattern);
+  }
+  for (var ii = 0; ii < numofDrops; ii++) {
+    waterDrop[ii] = new water();
   }
 }
 function onMessageArrived(message) {
@@ -101,11 +122,12 @@ function onMessageArrived(message) {
       var y = parseInt(dataReceive[4]);
       rX = x;
       rY = y;
+      console.log(rX, rY);
       stepsCount--;
     } else if (dataReceive[2] === "guess") {
-      isGuessGame=true
+      isGuessGame = true;
     } else if (dataReceive[2] === "hint") {
-      hint=true
+      hint = true;
     }
   }
 }
@@ -139,22 +161,21 @@ function MQTTsetup() {
   });
 }
 function draw() {
-  background(21, 21, 21);
-  fill(255);
+  image(backgroundImg, width - 768, height - 371, width, height);
   interface();
-  valve();
+  // valve();
   if (isPipeGame) {
     isGuessGame = false;
     pipeGame(level);
     if (level === 2 && isLoaded === false) {
       numOfPipes = 12;
-      createPipe(300, 200, numOfPipes, 2, [2, 1, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2]);
+      createPipe(400, 180, numOfPipes, 2, [2, 1, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2]);
       isLoaded = true;
     } else if (level === 3 && isLoaded === false) {
       numOfPipes = 11;
       createPipe(
         200,
-        200,
+        180,
         numOfPipes,
         3,
         [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2]
@@ -162,7 +183,6 @@ function draw() {
       isLoaded = true;
     }
     timer();
-
     displayPipe();
     checkWinCon();
     stroke(0);
@@ -171,37 +191,22 @@ function draw() {
     push();
     if (selectedImg === 0) {
       mouse = false;
-      strokeWeight(15);
-      stroke(255, 0, 0);
-      rect(200, 325, 240, 240);
-      image(img, 200, 325, 240, 240);
-    } else {
-      image(img, 200, 325, 220, 220);
+      image(img, 400, 280, 400, 400);
     }
     if (selectedImg === 1) {
       mouse = false;
-      strokeWeight(15);
-      stroke(255, 0, 0);
-      rect(455, 325, 240, 240);
-      image(img2, 455, 325, 240, 240);
-    } else {
-      image(img2, 455, 325, 220, 220);
+      image(img2, 400, 280, 400, 400);
     }
     if (selectedImg === 2) {
       mouse = false;
-      strokeWeight(15);
-      stroke(255, 0, 0);
-      rect(705, 325, 240, 240);
-      image(img3, 705, 325, 240, 240);
-    } else {
-      image(img3, 705, 325, 220, 220);
+      image(img3, 400, 280, 400, 400);
     }
 
     pop();
 
     timer();
   }
-
+  displayWater();
   fill(255);
   textSize(25);
   text(mouseX + "," + mouseY, mouseX, mouseY);
@@ -213,16 +218,16 @@ function win(l) {
     strokeWeight(25);
     noFill();
     animS.shape("l1", FRAME_RATE * 3, [
-      [200, 300],
-      [300, 300],
-      [300, 200],
-      [400, 200],
-      [500, 200],
-      [500, 300],
-      [400, 300],
-      [400, 400],
-      [300, 400],
-      [200, 400],
+      [300, 280],
+      [400, 280],
+      [400, 180],
+      [500, 180],
+      [600, 180],
+      [600, 280],
+      [500, 280],
+      [500, 380],
+      [400, 380],
+      [300, 380],
     ]);
     pop();
   } else if (l === 2) {
@@ -231,13 +236,13 @@ function win(l) {
     strokeWeight(25);
     noFill();
     animS.shape("l2", FRAME_RATE * 3, [
-      [500, 220],
-      [500, 400],
-      [400, 400],
-      [400, 300],
-      [300, 300],
-      [300, 400],
-      [250, 400],
+      [600, 200],
+      [600, 380],
+      [500, 380],
+      [500, 280],
+      [400, 280],
+      [400, 380],
+      [350, 380],
     ]);
     pop();
   } else if (l === 3) {
@@ -246,15 +251,15 @@ function win(l) {
     strokeWeight(25);
     noFill();
     animS.shape("l3", FRAME_RATE * 3, [
-      [600, 200],
-      [500, 200],
-      [500, 300],
-      [400, 300],
-      [400, 200],
-      [300, 200],
-      [300, 300],
-      [200, 300],
-      [200, 400],
+      [700, 180],
+      [600, 180],
+      [600, 280],
+      [500, 280],
+      [500, 180],
+      [400, 180],
+      [400, 280],
+      [300, 280],
+      [300, 380],
     ]);
     pop();
   }
@@ -262,29 +267,29 @@ function win(l) {
 function timer() {
   push();
   noStroke();
-  fill(0, 100);
-  rect(1000, 120, 210, 80);
+  fill(0);
+  rect(551, 691, 520, 70);
   fill(255, 0, 0);
   textSize(100);
   textFont(fontRegular);
   // text(8888, 900, 150);
   if (isPipeGame) {
-    text(stepsCount, 1023, 150);
+    text(stepsCount, 400, 722);
   }
-  if(isGuessGame){
-    text(countDown, 1023, 150);
- if (frameCount % 60 == 0 && countDown > 0) {
-    countDown--;
-  }
-  if (countDown === 0) {
-    // text("Game Over", width / 2, height / 2);
-    if (mouse) {
-      countDown = 10;
+  if (isGuessGame) {
+    text(countDown, 400, 722);
+    if (frameCount % 60 == 0 && countDown > 0) {
+      countDown--;
+    }
+    if (countDown === 0) {
+      // text("Game Over", width / 2, height / 2);
+      if (mouse) {
+        countDown = 10;
+      }
     }
   }
-  }
   // text("countDown", width / 2, 100);
- 
+
   pop();
 }
 function interfaceAlpha() {
@@ -300,16 +305,8 @@ function interfaceAlpha() {
   }
 }
 function interface() {
-  push();
-  // fill(21, 21, 21);
-  fill(0);
-  // strokeWeight(15);
-  stroke(255, 100);
-  rect(400, 250, 700, 400, 3);
-  strokeWeight(0);
-  fill(0);
-  // rect(450, 350, 748, 390, 15);
-  pop();
+  image(device, 150, 380, 1500, 750);
+  image(box, 1550, 370, 1400, 750);
   // led();
   interfaceAlpha();
   leftButton();
@@ -325,8 +322,8 @@ function led() {
 }
 function leftButton() {
   if (isGuessGame) {
-    var d = dist(mouseX, mouseY, 80, 580);
-    if (d < 75 && mouse) {
+    var d = dist(mouseX, mouseY, 300, 580);
+    if (d < 60 && mouse) {
       if (selectedImg < 0) {
         selectedImg = 0;
       } else {
@@ -334,67 +331,29 @@ function leftButton() {
       }
     }
   }
-  push();
-  noStroke();
-  fill(200, 15, 0, buttonAlpha);
-  ellipse(90, 580, 150, 150);
-  stroke(255, 0, 0, buttonAlpha);
-  noFill();
-  strokeWeight(10);
-  ellipse(90, 580, 140, 140);
-  fill(0, buttonAlpha);
-  strokeWeight(30);
-  stroke(0, buttonAlpha);
-  text("<", 80, 590);
-  pop();
+  image(leftb, 80, 310, 1400, 1000);
 }
 function middleButton() {
-  var d = dist(mouseX, mouseY, 1190, 580);
-  if (d < 75 && mouse) {
+  var d = dist(mouseX, mouseY, 460, 586);
+  if (d < 60 && mouse) {
     if (selectedImg === parseInt(targetSeed)) {
       sendMQTTMessage("guessComplete");
     }
   }
-  push();
-  noStroke();
-  fill(200, 15, 0, buttonAlpha);
-  ellipse(290, 580, 150, 150);
-  stroke(255, 0, 0, buttonAlpha);
-  noFill();
-  strokeWeight(10);
-  ellipse(290, 580, 140, 140);
-  fill(0, buttonAlpha);
-  strokeWeight(2);
-  stroke(0, buttonAlpha);
-  textSize(50);
-  text("OK", 250, 600);
-  pop();
+  image(middleb, 80, 315, 1400, 1000);
 }
 function rightButton() {
-  if(isGuessGame){
-  var d = dist(mouseX, mouseY, 490, 580);
-  if (d < 75 && mouse) {
-    if (selectedImg > 2) {
-      selectedImg = 2;
-    } else {
-      selectedImg++;
+  if (isGuessGame) {
+    var d = dist(mouseX, mouseY, 570, 580);
+    if (d < 60 && mouse) {
+      if (selectedImg > 2) {
+        selectedImg = 2;
+      } else {
+        selectedImg++;
+      }
     }
   }
-}
-
-  push();
-  noStroke();
-  fill(200, 15, 0, buttonAlpha);
-  ellipse(490, 580, 150, 150);
-  stroke(255, 0, 0, buttonAlpha);
-  noFill();
-  strokeWeight(10);
-  ellipse(490, 580, 140, 140);
-  fill(0, buttonAlpha);
-  strokeWeight(30);
-  stroke(0, buttonAlpha);
-  text(">", 480, 590);
-  pop();
+  image(rightb, 10, 310, 1600, 1000);
 }
 function valve() {
   push();
@@ -444,25 +403,34 @@ function valve() {
   line(0, 0, -50, 110);
   pop();
 }
-
 function displayPipe() {
   for (var ii = 0; ii < numOfPipes; ii++) {
     pipes[ii].rotation(rX, rY);
     pipes[ii].display();
   }
 }
+function displayWater() {
+  if(waterTime){
+    for (var ii = numofDrops - 1; ii >= 0; ii--) {
+      waterDrop[ii].update();
+      waterDrop[ii].show();
+      
+    }
+  }
+}
 function mouseClicked() {
   mouse = true;
+  waterTime=!waterTime
 }
 function createPipe(xCor, yCor, n, l, pattern) {
   if (l === 1) {
     for (var ii = 0; ii < n; ii++) {
       if (ii === 4) {
-        xCor = 300;
+        xCor = 400;
         yCor += 100;
       }
       if (ii === 8) {
-        xCor = 300;
+        xCor = 400;
         yCor += 100;
       }
       pipes[ii] = new pipeBlocks(xCor, yCor, pattern[ii]);
@@ -471,12 +439,12 @@ function createPipe(xCor, yCor, n, l, pattern) {
   } else if (l === 2) {
     for (var ii = 0; ii < n; ii++) {
       if (ii === 2) {
-        xCor = 600;
+        xCor = 700;
       } else if (ii === 3) {
-        xCor = 200;
+        xCor = 300;
         yCor += 100;
       } else if (ii === 8) {
-        xCor = 300;
+        xCor = 400;
         yCor += 100;
       }
       pipes[ii] = new pipeBlocks(xCor, yCor, pattern[ii]);
@@ -485,13 +453,13 @@ function createPipe(xCor, yCor, n, l, pattern) {
   } else if (l === 3) {
     for (var ii = 0; ii < n; ii++) {
       if (ii === 0) {
-        xCor += 100;
+        xCor += 200;
       }
       if (ii === 3) {
-        xCor = 200;
+        xCor = 300;
         yCor += 100;
       } else if (ii === 8) {
-        xCor = 300;
+        xCor = 400;
         yCor += 100;
       }
       pipes[ii] = new pipeBlocks(xCor, yCor, pattern[ii]);
@@ -502,7 +470,7 @@ function createPipe(xCor, yCor, n, l, pattern) {
 function reset() {
   mouse = false;
   isLoaded = false;
-  hint=false
+  hint = false;
   pipes = [];
 }
 function checkWinCon() {
@@ -560,70 +528,69 @@ function pipeGame(l) {
     // rect(400, 300, 500, 300);
     if (hint === false) {
       fill(0, 0, 255);
-      rect(200, 200, 100, 100);
-      rect(600, 400, 100, 100);
-      rect(200, 300, 100, 100);
+      rect(300, 180, 100, 100);
+      rect(700, 380, 100, 100);
+      rect(300, 280, 100, 100);
     } else {
       fill(0, 0, 255, hintAlpha);
       hintAlpha -= 3;
-      rect(200, 200, 100, 100);
-      rect(600, 400, 100, 100);
+      rect(300, 180, 100, 100);
+      rect(700, 380, 100, 100);
       fill(0, 0, 255);
-      rect(200, 300, 100, 100);
+      rect(300, 280, 100, 100);
     }
     fill(0);
     // rect(400, 295, 50, 10);
-    text("water", 180, 300);
+    text("water", 280, 300);
     fill(0, 255, 0);
-    rect(200, 400, 100, 100);
+    rect(300, 380, 100, 100);
     fill(0);
-    rect(200, 400, 10, 50);
-    text("plant", 200, 400);
+    rect(350, 380, 10, 50);
+    text("plant", 300, 400);
   } else if (l === 2) {
-    rect(400, 300, 500, 300);
+    // rect(400, 300, 500, 300);
     if (hint === false) {
       fill(0, 0, 255);
-      rect(200, 200, 100, 100);
-      rect(500, 200, 100, 100);
+      rect(300, 180, 100, 100);
+      rect(600, 180, 100, 100);
     } else {
       fill(0, 0, 255, hintAlpha);
       hintAlpha -= 3;
-      rect(200, 200, 100, 100);
+      rect(300, 180, 100, 100);
       fill(0, 0, 255);
-      rect(500, 200, 100, 100);
+      rect(600, 180, 100, 100);
     }
     fill(0);
-    rect(500, 245, 50, 10);
-    text("water", 480, 210);
+    rect(600, 225, 50, 10);
+    text("water", 580, 210);
     fill(0, 255, 0);
-    rect(200, 400, 100, 100);
+    rect(300, 380, 100, 100);
     fill(0);
-    rect(200, 355, 50, 10);
-    text("plant", 190, 410);
+    rect(300, 335, 50, 10);
+    text("plant", 290, 410);
   } else if (l === 3) {
     // rect(400, 300, 500, 300);
     if (hint === false) {
       fill(0, 0, 255);
-      rect(200, 200, 100, 100);
-      rect(600, 400, 100, 100);
-      rect(600, 200, 100, 100);
+      rect(300, 180, 100, 100);
+      rect(700, 380, 100, 100);
+      rect(700, 180, 100, 100);
     } else {
       fill(0, 0, 255, hintAlpha);
       hintAlpha -= 3;
-      rect(200, 200, 100, 100);
-      rect(600, 400, 100, 100);
+      rect(300, 180, 100, 100);
+      rect(700, 380, 100, 100);
       fill(0, 0, 255);
-      rect(600, 200, 100, 100);
+      rect(700, 180, 100, 100);
     }
-
     fill(0);
-    rect(555, 200, 10, 50);
-    text("water", 590, 210);
+    rect(655, 180, 10, 50);
+    text("water", 690, 190);
     fill(0, 255, 0);
-    rect(200, 400, 100, 100);
+    rect(300, 380, 100, 100);
     fill(0);
-    rect(200, 355, 50, 10);
-    text("plant", 180, 410);
+    rect(300, 335, 50, 10);
+    text("plant", 280, 390);
   }
   pop();
 }
@@ -641,15 +608,7 @@ class pipeBlocks {
   }
   rotation(x, y) {
     push();
-    // if (mouseX < this.toX + 50 && mouseX > this.toX - 50) {
-    //   if (mouseY < this.toY + 50 && mouseY > this.toY - 50) {
-    //     if (mouse) {
-    //       this.rotate = true;
-    //       mouse = false;
-    //     }
-    //   }
-    // }
-    if (this.toX === x - 800 && this.toY === y) {
+    if (this.toX === x - 620 && this.toY === y) {
       this.rotate = true;
       rX = 0;
       rY = 0;
@@ -695,19 +654,6 @@ class pipeBlocks {
       rect(this.x, this.y + 45, 40, 10);
       pop();
     }
-    // if (pattern === 3) {
-    //   push();
-    //   fill(99, 98, 94);
-    //   rect(this.x - 45, this.y, 10, 40);
-    //   rect(this.x, this.y - 45, 40, 10);
-    //   fill(184, 181, 173);
-    //   rect(this.x, this.y, 80, 28);
-    //   rect(this.x, this.y, 28, 80);
-    //   fill(99, 98, 94);
-    //   rect(this.x + 45, this.y, 10, 40);
-    //   rect(this.x, this.y + 45, 40, 10);
-    //   pop();
-    // }
     if (pattern === 2) {
       push();
       fill(99, 98, 94);
@@ -733,6 +679,32 @@ class pipeBlocks {
     }
   }
 }
+class water {
+  constructor() {
+    this.x = random(1193,1284);
+    this.y = 57;
+    this.yVelocity = random(1, 5);
+    this.alpha = 255;
+    this.acc = 0.05;
+  }
+  update() {
+    this.yVelocity += this.acc;
+    this.y += this.yVelocity;
+    this.alpha-=1.3;
+    if(this.y>1050){
+      this.y=57
+      this.yVelocity=random(1, 5);
+    }
+  }
+  show() {
+    var wgt=map(this.yVelocity, 1, 10, 0.5, 2);
+    push()
+    strokeWeight(wgt);
+    stroke(187, 217, 238);
+    line(this.x, this.y, this.x, this.y +10);
+    pop()
+  }
+}
 ///level 1 win con///
 ///0-270,1-180/270,2-0,4-90,5-270,6-90,8-90/270,9-90
 
@@ -742,7 +714,4 @@ class pipeBlocks {
 ///level 3 win con///
 ///1-270,2-0,3-270,4-270,5-90,6-180,7-90
 
-///add 3 LED, when message recived, led blinks for 1-2 secs. Then display the screen
-// One player will only be able to see pipes, but can't control and have no ideal where water and plant is
-// Another one will be able turn each pipe and know where it starts and ends
-// whenever mouse is pressed, it will send the x and y coordinates through MQTT to another player,
+

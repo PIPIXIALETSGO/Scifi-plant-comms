@@ -24,14 +24,17 @@ var img,
   leftb,
   middleb,
   rightb,
+  guessBox,
   fontRegular;
-var countDown = 20;
+var countDown = 50;
 var stepsCount = 10;
 var selectedImg = 1;
 var buttonAlpha = 100;
 var targetSeed;
 var numofDrops = 100;
-var waterTime=false
+var waterTime = false;
+var waterTimer=0
+var barStart=842
 ////////////////// valve
 var valveRotate = false;
 var valveAngle = 360;
@@ -89,15 +92,16 @@ var isLoaded = false;
 var pattern = [2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2]; //1=vertical   2=L-shape 3=cross
 function preload() {
   fontRegular = loadFont("assets/digital.ttf");
-  img = loadImage("./assets/images/seed0.jpg");
-  img2 = loadImage("./assets/images/seed1.jpg");
-  img3 = loadImage("./assets/images/seed2.jpg");
+  img = loadImage("./assets/images/seed0.png");
+  img2 = loadImage("./assets/images/seed1.png");
+  img3 = loadImage("./assets/images/seed2.png");
   backgroundImg = loadImage("./assets/images/BG.png");
   device = loadImage("./assets/images/console.png");
   box = loadImage("./assets/images/box.png");
   leftb = loadImage("./assets/images/left.png");
   middleb = loadImage("./assets/images/middle.png");
   rightb = loadImage("./assets/images/right.png");
+  guessBox=loadImage("./assets/images/guessBox.png");
 }
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -106,6 +110,7 @@ function setup() {
   angleMode(DEGREES);
   imageMode(CENTER);
   rectMode(CENTER);
+  image(guessBox,1261,589,100,100)
   if (level === 1) {
     createPipe(400, 180, 11, 1, pattern);
   }
@@ -162,6 +167,7 @@ function MQTTsetup() {
 }
 function draw() {
   image(backgroundImg, width - 768, height - 371, width, height);
+  image(guessBox,1761,410,2000,1000)
   interface();
   // valve();
   if (isPipeGame) {
@@ -182,28 +188,34 @@ function draw() {
       );
       isLoaded = true;
     }
-    timer();
+    // timer();
     displayPipe();
     checkWinCon();
     stroke(0);
   }
   if (isGuessGame) {
     push();
+    image(img, 380, 340, 500, 500);
+    image(img2, 180, 340, 500, 500);
+    image(img3, 580, 340, 500, 500);
+    noFill()
+    strokeWeight(7)
     if (selectedImg === 0) {
       mouse = false;
-      image(img, 400, 280, 400, 400);
+    rect(280,265,170,170)
+
     }
     if (selectedImg === 1) {
       mouse = false;
-      image(img2, 400, 280, 400, 400);
+    rect(480,265,170,170)
+
     }
     if (selectedImg === 2) {
       mouse = false;
-      image(img3, 400, 280, 400, 400);
+    rect(680,265,170,170)
+
     }
-
     pop();
-
     timer();
   }
   displayWater();
@@ -305,25 +317,35 @@ function interfaceAlpha() {
   }
 }
 function interface() {
-  image(device, 150, 380, 1500, 750);
   image(box, 1550, 370, 1400, 750);
+  image(device, 150, 380, 1500, 750);
   // led();
   interfaceAlpha();
   leftButton();
   middleButton();
   rightButton();
+  // waterBar();
 }
-function led() {
-  noStroke();
-  fill(255, 0, 0, 100);
-  ellipse(350, 50, 50, 50);
-  ellipse(450, 50, 50, 50);
-  ellipse(550, 50, 50, 50);
+function waterBar() {
+  push();
+  rectMode(CORNERS);
+  fill(0, 255, 0,100);
+  rect(barStart, 725,339,658);
+  pop();
+  if(isPipeGame===false&&isGuessGame==false){
+    if(barStart==339){
+      isPipeGame=true
+    }else{
+      barStart--
+    }
+  }
 }
 function leftButton() {
   if (isGuessGame) {
-    var d = dist(mouseX, mouseY, 300, 580);
+    var d = dist(mouseX, mouseY, 430, 580);
     if (d < 60 && mouse) {
+  console.log('left')
+
       if (selectedImg < 0) {
         selectedImg = 0;
       } else {
@@ -331,20 +353,20 @@ function leftButton() {
       }
     }
   }
-  image(leftb, 80, 310, 1400, 1000);
+  image(leftb, 170, 310, 1400, 1000);
 }
 function middleButton() {
-  var d = dist(mouseX, mouseY, 460, 586);
+  var d = dist(mouseX, mouseY, 558, 580);
   if (d < 60 && mouse) {
     if (selectedImg === parseInt(targetSeed)) {
       sendMQTTMessage("guessComplete");
     }
   }
-  image(middleb, 80, 315, 1400, 1000);
+  image(middleb, 155, 285, 1500, 1100);
 }
 function rightButton() {
   if (isGuessGame) {
-    var d = dist(mouseX, mouseY, 570, 580);
+    var d = dist(mouseX, mouseY, 690, 580);
     if (d < 60 && mouse) {
       if (selectedImg > 2) {
         selectedImg = 2;
@@ -353,7 +375,7 @@ function rightButton() {
       }
     }
   }
-  image(rightb, 10, 310, 1600, 1000);
+  image(rightb, 115, 310, 1600, 1000);
 }
 function valve() {
   push();
@@ -410,17 +432,23 @@ function displayPipe() {
   }
 }
 function displayWater() {
-  if(waterTime){
-    for (var ii = numofDrops - 1; ii >= 0; ii--) {
-      waterDrop[ii].update();
-      waterDrop[ii].show();
-      
+  if (waterTime) {
+    // for (var ii = numofDrops - 1; ii >= 0; ii--) {
+    //   waterDrop[ii].update();
+    //   waterDrop[ii].show();
+    // }
+    if(waterTimer<400){
+      waterTimer++
+    }else{
+      waterTime=false
+      barStart=842
+      waterTimer=0
     }
   }
 }
 function mouseClicked() {
   mouse = true;
-  waterTime=!waterTime
+  waterTime = !waterTime;
 }
 function createPipe(xCor, yCor, n, l, pattern) {
   if (l === 1) {
@@ -487,6 +515,7 @@ function checkWinCon() {
     if (total === 8) {
       valveTime = true;
       win(1);
+      waterTime=true
       isLoaded = false;
     }
   } else if (level === 2) {
@@ -500,6 +529,7 @@ function checkWinCon() {
     }
     if (total === 6) {
       valveTime = true;
+      waterTime=true
       win(2);
     }
   } else if (level === 3) {
@@ -513,11 +543,10 @@ function checkWinCon() {
     }
     if (total === 7) {
       valveTime = true;
+      waterTime=true
       win(3);
     }
   }
-
-  // console.log(total);
 }
 function pipeGame(l) {
   textSize(20);
@@ -593,6 +622,11 @@ function pipeGame(l) {
     text("plant", 280, 390);
   }
   pop();
+}
+function plant(){
+  if(level===1){
+
+  }
 }
 class pipeBlocks {
   constructor(x, y, pattern) {
@@ -681,7 +715,7 @@ class pipeBlocks {
 }
 class water {
   constructor() {
-    this.x = random(1193,1284);
+    this.x = random(1193, 1284);
     this.y = 57;
     this.yVelocity = random(1, 5);
     this.alpha = 255;
@@ -690,19 +724,19 @@ class water {
   update() {
     this.yVelocity += this.acc;
     this.y += this.yVelocity;
-    this.alpha-=1.3;
-    if(this.y>1050){
-      this.y=57
-      this.yVelocity=random(1, 5);
+    this.alpha -= 1.3;
+    if (this.y > 1050) {
+      this.y = 57;
+      this.yVelocity = random(1, 5);
     }
   }
   show() {
-    var wgt=map(this.yVelocity, 1, 10, 0.5, 2);
-    push()
+    var wgt = map(this.yVelocity, 1, 10, 0.5, 2);
+    push();
     strokeWeight(wgt);
     stroke(187, 217, 238);
-    line(this.x, this.y, this.x, this.y +10);
-    pop()
+    line(this.x, this.y, this.x, this.y + 10);
+    pop();
   }
 }
 ///level 1 win con///
@@ -713,5 +747,3 @@ class water {
 
 ///level 3 win con///
 ///1-270,2-0,3-270,4-270,5-90,6-180,7-90
-
-

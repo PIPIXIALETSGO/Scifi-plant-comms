@@ -127,9 +127,7 @@ function setup() {
   angleMode(DEGREES);
   imageMode(CENTER);
   rectMode(CENTER);
-  if (level === 1) {
-    createPipe(500, 250, 4, 1, pattern);
-  }
+
 }
 function onMessageArrived(message) {
   let dataReceive = split(trim(message.payloadString), "/");
@@ -180,19 +178,13 @@ function draw() {
   timer();
   // valve();
   // test()
-  if (valveRotate === false && valveTime) {
-    valveArrow();
-  }
+
   if (isPipeGame) {
     isGuessGame = false;
-    if (level === 2 && isLoaded === false) {
-      numOfPipes = 7;
-      createPipe(450, 250, numOfPipes, 2, [1, 2, 2, 1, 2, 2, 1]);
-      isLoaded = true;
-    } else if (level === 3 && isLoaded === false) {
+ if (level === 3 && isLoaded === false) {
       numOfPipes = 15;
       createPipe(
-        920,
+        940,
         180,
         numOfPipes,
         3,
@@ -205,79 +197,52 @@ function draw() {
   }
   if (isGuessGame) {
     push();
-    if (selectedImg === 0) {
-      mouse = false;
-      strokeWeight(15);
-      stroke(255, 0, 0);
-      rect(200, 325, 240, 240);
-      image(img, 200, 325, 240, 240);
-    } else {
-      image(img, 200, 325, 220, 220);
-    }
-    if (selectedImg === 1) {
-      mouse = false;
-      strokeWeight(15);
-      stroke(255, 0, 0);
-      rect(455, 325, 240, 240);
-      image(img2, 455, 325, 240, 240);
-    } else {
-      image(img2, 455, 325, 220, 220);
-    }
-    if (selectedImg === 2) {
-      mouse = false;
-      strokeWeight(15);
-      stroke(255, 0, 0);
-      rect(705, 325, 240, 240);
-      image(img3, 705, 325, 240, 240);
-    } else {
-      image(img3, 705, 325, 220, 220);
-    }
-
     pop();
-
     timer();
   }
   if (isQuizGame) {
+    isPipeGame=false
     push();
     fill(255)
-    rect(1120, 280, 670, 400,50);
+    noStroke()
+    // rect(1150, 280, 630, 400,50);
     fill(255);
     stroke(0);
     if (selectedAnswer === 1) {
       strokeWeight(5);
       stroke(255, 0, 0);
-      rect(880, 350, 150, 100);
+      rect(890, 350, 130, 100);
     } else {
       stroke(0);
       strokeWeight(1);
-      rect(880, 350, 150, 100);
+      rect(890, 350, 130, 100);
     }
     if (selectedAnswer === 2) {
       strokeWeight(5);
       stroke(255, 0, 0);
-      rect(1060, 350, 150, 100);
+      rect(1060, 350, 130, 100);
     } else {
       stroke(0);
       strokeWeight(1);
-      rect(1060, 350, 150, 100);
+      rect(1060, 350, 130, 100);
     }
     if (selectedAnswer === 3) {
       strokeWeight(5);
       stroke(255, 0, 0);
-      rect(1240, 350, 150, 100);
+      rect(1240, 350, 130, 100);
     } else {
       stroke(0);
       strokeWeight(1);
-      rect(1240, 350, 150, 100);
+      rect(1240, 350, 130, 100);
     }
     if (selectedAnswer === 4) {
       strokeWeight(5);
       stroke(255, 0, 0);
-      rect(1420, 350, 150, 100);
+      rect(1420, 350, 130, 100);
     } else {
       stroke(0);
       strokeWeight(1);
-      rect(1420, 350, 150, 100);
+      rect(1420, 350, 130, 100);
     }
     pop();
     quizBlock();
@@ -328,25 +293,17 @@ function interfaceAlpha() {
   
 }
 function interface() {
-  image(device,785,380,1500,750)
-  image(box,750,370,1400,750)
+  image(device,835,380,1400,750)
+  image(box,700,370,1400,750)
   if(dist(mouseX,mouseY,800,600)<25&&mouse){
     isQuizGame=!isQuizGame
     mouse=false
   }
   ellipse(800,600,50)
-  // led();
   interfaceAlpha();
   leftButton();
   middleButton();
   rightButton();
-}
-function led() {
-  noStroke();
-  fill(255, 0, 0, 100);
-  ellipse(350, 50, 50, 50);
-  ellipse(450, 50, 50, 50);
-  ellipse(550, 50, 50, 50);
 }
 function quizBlock() {
   push();
@@ -360,8 +317,9 @@ function quizBlock() {
 }
 function leftButton() {
   if (isGuessGame) {
-    var d = dist(mouseX, mouseY, 1060, 580);
+    var d = dist(mouseX, mouseY, 1090, 580);
     if (d < 70 && mouse) {
+      console.log('left')
       if (selectedImg < 0) {
         selectedImg = 0;
       } else {
@@ -370,7 +328,7 @@ function leftButton() {
     }
   }
   if (isQuizGame) {
-    var d = dist(mouseX, mouseY, 1060, 580);
+    var d = dist(mouseX, mouseY, 1090, 580);
     if (d < 70 && mouse) {
       if (selectedAnswer <= 1) {
         selectedAnswer = 1;
@@ -380,12 +338,11 @@ function leftButton() {
       }
     }
   }
-  image(leftb,790,280,1450,1100)
-
+  image(leftb,830,300,1400,1000)
 }
 function middleButton() {
   if(isGuessGame){
-    var d = dist(mouseX, mouseY, 1180, 580);
+    var d = dist(mouseX, mouseY, 1345, 580);
     if (d < 70 && mouse) {
       if (selectedImg === parseInt(targetSeed)) {
         sendMQTTMessage("guessComplete");
@@ -404,7 +361,7 @@ function middleButton() {
         }
     }
   }
-  image(middleb,790,280,1450,1100)
+  image(middleb,810,280,1500,1100)
 
 }
 function rightButton() {
@@ -429,7 +386,7 @@ function rightButton() {
       }
     }
   }
-  image(rightb,790,280,1450,1100)
+  image(rightb,775  ,280,1600,1100)
 
 }
 function valve() {
@@ -536,10 +493,10 @@ function createPipe(xCor, yCor, n, l, pattern) {
   } else if (l === 3) {
     for (var ii = 0; ii < n; ii++) {
       if (ii === 5) {
-        xCor = 920;
+        xCor = 940;
         yCor += 100;
       } else if (ii === 10) {
-        xCor = 920;
+        xCor = 940;
         yCor += 100;
       }
       pipes[ii] = new pipeBlocks(xCor, yCor, pattern[ii]);

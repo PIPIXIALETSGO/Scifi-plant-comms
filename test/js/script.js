@@ -30,7 +30,7 @@ var backgroundImg,
 var leaf1, leaf2, leaf3, root1, root2, root3, con1, con2, con3;
 var countDown = 0;
 var selectedImg = 1;
-var buttonAlpha = 100;
+var buttonAlpha = 255;
 var targetSeed;
 var stepsCount = 10;
 ///////////////////Quiz///////////
@@ -76,7 +76,7 @@ var quiz = [
     correct: 3,
   },
 ];
-var story = "I like you,haha omg";
+var story = "haha";
 var isQuizGame = false;
 var selectedAnswer = 1;
 var quizNumber;
@@ -115,6 +115,7 @@ var winCon3 = [
   { position: 7, angle: 90, isMatched: 0 },
 ];
 var mouse = false;
+var hint = false;
 var seedNumber;
 var level = 0;
 var isLoaded = false;
@@ -156,14 +157,13 @@ function onMessageArrived(message) {
   let dataReceive = split(trim(message.payloadString), "/");
   if (dataReceive[1] == myName) {
     if (dataReceive[2] === "guessComplete") {
-      waterTime=true
+      waterTime = true;
     } else if (dataReceive[2] === "water") {
       waterTime = true;
     } else if (dataReceive[2] === "pipeComplete") {
       reset();
-      level=2
-    }
-    else if (dataReceive[2] === "fail") {
+      level = 2;
+    } else if (dataReceive[2] === "fail") {
       isFailed = true;
     }
   }
@@ -205,8 +205,9 @@ function draw() {
   } else {
     interface();
     if (isGuessGame) {
-      image(seed, 900, 400, 1200, 1000);
-      image(guessBox, 900, 400, 2000, 1000);
+      image(guessBox, 850, 400, 2000, 1000);
+      text("Describe the seed to your partner", 954, 120);
+      image(seed, 900, 450, 1200, 1000);
     }
     if (isPipeGame) {
       push();
@@ -279,7 +280,7 @@ function draw() {
   }
   fill(0);
   textSize(25);
-  // text(mouseX + "," + mouseY, mouseX, mouseY);
+  text(mouseX + "," + mouseY, mouseX, mouseY);
 }
 function timer() {
   push();
@@ -295,24 +296,12 @@ function timer() {
   }
   pop();
 }
-function interfaceAlpha() {
-  if (isGuessGame || isQuizGame) {
-    buttonAlpha = 255;
-  } else {
-    buttonAlpha = 100;
-  }
-  if (isPipeGame) {
-    valveAlpha = 255;
-  } else {
-    valveAlpha = 100;
-  }
-}
+
 function interface() {
   image(backgroundImg, width - 768, height - 371, width, height);
   image(device, 835, 380, 1400, 750);
   plantPhase(level);
   image(box, 700, 370, 1400, 750);
-  interfaceAlpha();
   hintButton();
   leftButton();
   middleButton();
@@ -350,9 +339,14 @@ function middleButton() {
       if (selectedAnswer === quiz[quizNumber].correct) {
         sendMQTTMessage("hintComplete");
         isQuizGame = false;
+        hint = true;
         isPipeGame = true;
         mouse = false;
+        quiz.splice(quizNumber, 1);
+        quizNumber = Math.round(random(0, quiz.length));
         selectedAnswer = 1;
+      } else {
+        mouse = false;
       }
     }
   }
@@ -378,7 +372,19 @@ function hintButton() {
     isPipeGame = false;
     mouse = false;
   }
+  push();
   image(hintb, 820, 300, 1500, 1000);
+  if (isPipeGame) {
+    if (hint === false) {
+      fill(209, 27, 21, 255);
+    } else {
+      fill(209, 27, 21, 80);
+    }
+    textSize(70);
+    noStroke();
+    text("?", 940, 610);
+    pop();
+  }
 }
 function displayPipe(numOfPipes) {
   for (var ii = 0; ii < numOfPipes; ii++) {
@@ -394,13 +400,14 @@ function displayWater() {
     }
     if (waterTimer < 300) {
       waterTimer++;
-    } else {   
-      if(level===0){
+    } else {
+      hint = flase;
+      if (level === 0) {
         isGuessGame = false;
         isPipeGame = true;
-        level=1
-      }else if(level===1){
-        level=2
+        level = 1;
+      } else if (level === 1) {
+        level = 2;
       }
       waterTime = false;
       waterTimer = 0;

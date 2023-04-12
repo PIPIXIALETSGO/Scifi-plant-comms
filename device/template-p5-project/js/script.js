@@ -7,8 +7,10 @@ var numOfPipes = 11;
 var xCor = 500;
 var yCor = 250;
 var randomAngle = [0, 90, 180, 270];
-var isPipeGame = false;
-var isGuessGame = true;
+var isPipeGame = true;
+var isGuessGame = false;
+var isFailded=false
+var isloadingScreen=false 
 var rX = 0;
 var rY = 0;
 const FRAME_RATE = 30;
@@ -28,10 +30,17 @@ var img,
   guessBox,
   waterLogo,
   plantLogo,
+  root1,
+  root2,
+  root3,
+  leaf1,
+  leaf2,
+  leaf3,
+  con1,
   fontRegular;
 var countDown = 100;
 var stepCount = 20;
-var selectedImg = 1;
+var selectedImg = 0;
 var buttonAlpha = 100;
 var targetSeed;
 var numofDrops = 100;
@@ -82,7 +91,7 @@ var winCon3 = [
   { position: 6, angle: 90, isMatched: 0 },
 ];
 var mouse = false;
-var level = 0;
+var level = 2;
 var isLoaded = false;
 var seedNumber;
 var pattern = [2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2]; //1=vertical   2=L-shape 3=cross
@@ -101,6 +110,13 @@ function preload() {
   waterLogo = loadImage("./assets/images/water_logo.png");
   waterLogo2 = loadImage("./assets/images/water_logo.png");
   plantLogo = loadImage("./assets/images/plant_logo.png");
+  root1 = loadImage("./assets/images/root1.png");
+  root2 = loadImage("./assets/images/root2.png");
+  root3 = loadImage("./assets/images/root3.png");
+  leaf1 = loadImage("./assets/images/leaf1.png");
+  leaf2 = loadImage("./assets/images/leaf2.png");
+  leaf3 = loadImage("./assets/images/leaf3.png");
+  con1 = loadImage("./assets/images/con1.png");
 }
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -122,7 +138,6 @@ function onMessageArrived(message) {
   if (dataReceive[1] == myName) {
     if (dataReceive[2] == "seed") {
       seedNumber = parseInt(dataReceive[3]);
-      console.log(seedNumber);
     } else if (dataReceive[2] == "pipe") {
       var x = parseInt(dataReceive[3]);
       var y = parseInt(dataReceive[4]);
@@ -164,7 +179,14 @@ function MQTTsetup() {
   });
 }
 function draw() {
+  if(isloadingScreen){
+    loadingScreen()
+  }else{
   image(backgroundImg, width - 768, height - 371, width, height);
+  plantPhase(level) 
+  if(isGuessGame){
+    image(guessBox, 1661, 410, 2000, 1000);
+  }
   interface();
   if (isPipeGame) {
     isGuessGame = false;
@@ -174,7 +196,6 @@ function draw() {
       createPipe(280, 180, numOfPipes, 2, [2, 1, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2]);
       isLoaded = true;
     } else if (level === 3 && isLoaded === false) {
-      console.log('haha')
       numOfPipes = 11;
       createPipe(
         0,
@@ -194,34 +215,40 @@ function draw() {
     }
   }
   if (isGuessGame) {
-    image(guessBox, 1761, 410, 2000, 1000);
     push();
-    image(img, 240, 340, 500, 500);
-    image(img2, 60, 340, 500, 500);
-    image(img3, 420, 340, 500, 500);
+    text('Which one is the right one?',150,135)
+    image(img2, 240, 340, 600, 500);
+    image(img, 60, 340, 600, 500);
+    image(img3, 420, 340, 600, 500);
     noFill();
     strokeWeight(7);
+    stroke(158, 37, 245)
     if (selectedImg === 0) {
       mouse = false;
-      rect(170, 265, 170, 170);
+      rect(190, 265, 170, 170);
     }
     if (selectedImg === 1) {
       mouse = false;
-      rect(350, 265, 170, 170);
+      rect(370, 265, 170, 170);
     }
     if (selectedImg === 2) {
       mouse = false;
-      rect(530, 265, 170, 170);
+      rect(550, 265, 170, 170);
     }
     pop();
   }
   displayWater();
-  timer();
+  if(isFailded){
+    failScreen(1)
+  }
+}
+plantPhase(level) 
+
   fill(255);
-  console.log(level)
-  // win(3)
-  textSize(25);
+ textSize(25);
   text(mouseX + "," + mouseY, mouseX, mouseY);
+  image(con1,800,-300,4000,300)
+
 }
 function win(l) {
   if (l === 1) {
@@ -280,8 +307,7 @@ function timer() {
   push();
   noStroke();
   fill(0);
-  rect(311, 691, 520, 70);
-  fill(255, 0, 0);
+  fill(158, 37, 245);
   textSize(100);
   textFont(fontRegular);
   // text(8888, 900, 150);
@@ -294,12 +320,14 @@ function timer() {
     }
     if (countDown === 0) {
       sendMQTTMessage("fail");
+      isFailded=true
     }
   }
   if (isPipeGame) {
     text(stepCount, 400, 722);
     if (stepCount === 0) {
       sendMQTTMessage("fail");
+      isFailded=true
     }
   }
 
@@ -324,33 +352,9 @@ function interface() {
   leftButton();
   middleButton();
   rightButton();
+  timer();
 }
 
-function leftButton() {
-  if (isGuessGame) {
-    var d = dist(mouseX, mouseY, 200, 580);
-    if (d < 60 && mouse) {
-      console.log("left");
-
-      if (selectedImg < 0) {
-        selectedImg = 0;
-      } else {
-        selectedImg--;
-      }
-    }
-  }
-  image(leftb, -60, 310, 1400, 1000);
-}
-function middleButton() {
-  var d = dist(mouseX, mouseY, 308, 580);
-  if (d < 60 && mouse) {
-    if (selectedImg === seedNumber) {
-      sendMQTTMessage("guessComplete");
-      waterTime=true
-    }
-  }
-  image(middleb, -100, 285, 1500, 1100);
-}
 function rightButton() {
   if (isGuessGame) {
     var d = dist(mouseX, mouseY, 413, 580);
@@ -362,7 +366,35 @@ function rightButton() {
       }
     }
   }
-  image(rightb, -150, 310, 1600, 1000);
+  image(leftb, 670, 310, 1400, 1000);
+}
+function middleButton() {
+  if(isGuessGame){
+    var d = dist(mouseX, mouseY, 308, 580);
+    if (d < 60 && mouse) {
+      if (selectedImg === seedNumber) {
+        sendMQTTMessage("guessComplete");
+        waterTime=true
+      }else{
+        countDown-=10
+      }
+    }
+  }
+  image(middleb, -100, 285, 1500, 1100);
+}
+function leftButton() {
+  if (isGuessGame) {
+    var d = dist(mouseX, mouseY, 200, 580);
+  
+    if (d < 60 && mouse) {
+      if (selectedImg < 0) {
+        selectedImg = 0;
+      } else {
+        selectedImg--;
+      }
+    }
+  }
+  image(rightb,750, 310, 1600, 1000);
 }
 
 function displayPipe() {
@@ -554,9 +586,29 @@ function pipeGame(l) {
   }
   pop();
 }
-function plant() {
-  if (level === 1) {
+function plantPhase(l) {
+  if (l === 1) {
+    image(leaf1, 700, 340, 2000, 1000);
+    image(root1, 750, 360, 1700, 750);
+  } else if (l === 2) {
+    image(leaf1, 700, 340, 2000, 1000);
+    image(leaf2, 750, 340, 2000, 1000);
+    image(root1, 750, 360, 1700, 750);
+    image(root2, 750, 370, 1700, 750);
+  } else if (l === 3) {
+    image(leaf1, 700, 340, 2000, 1000);
+    image(leaf2, 750, 340, 2000, 1000);
+    image(leaf3, 750, 375, 1700, 750);
+    image(root1, 750, 360, 1700, 750);
+    image(root2, 750, 370, 1700, 750);
+    image(root3, 750, 380, 1700, 750);
   }
+}
+function failScreen(l){
+  image(con1,1800,-400,4000,3000)
+}
+function loadingScreen(){
+  background(255)
 }
 class pipeBlocks {
   constructor(x, y, pattern) {
@@ -610,23 +662,21 @@ class pipeBlocks {
     noStroke();
     if (pattern === 1) {
       push();
-      fill(99, 98, 94);
+      fill(66, 50, 168);
       rect(this.x, this.y - 45, 40, 10);
-      fill(184, 181, 173);
-      rect(this.x, this.y, 28, 80);
-      fill(99, 98, 94);
       rect(this.x, this.y + 45, 40, 10);
+      fill(107, 84, 255);
+      rect(this.x, this.y, 28, 80);
       pop();
     }
     if (pattern === 2) {
       push();
-      fill(99, 98, 94);
+      fill(66, 50, 168);
       rect(this.x - 45, this.y, 10, 40);
-      fill(184, 181, 173);
+      rect(this.x, this.y + 45, 40, 10);
+      fill(107, 84, 255);
       rect(this.x - 22.5, this.y, 35, 28, 3);
       rect(this.x, this.y + 13, 28, 55, 3);
-      fill(99, 98, 94);
-      rect(this.x, this.y + 45, 40, 10);
       pop();
     }
   }

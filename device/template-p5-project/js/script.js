@@ -7,7 +7,7 @@ var numOfPipes = 11;
 var xCor = 500;
 var yCor = 250;
 var randomAngle = [0, 90, 180, 270];
-var isPipeGame = true;
+var isPipeGame = false;
 var isGuessGame = false;
 var isFailded=false
 var isloadingScreen=false 
@@ -17,6 +17,9 @@ const FRAME_RATE = 30;
 var hint = false;
 var hintAlpha = 255;
 var barAlpha = 0;
+var confirmAlpha=0
+var p2Alpha=0
+var loadingCounter=0
 ////////// guess game
 var img,
   img2,
@@ -91,7 +94,7 @@ var winCon3 = [
   { position: 6, angle: 90, isMatched: 0 },
 ];
 var mouse = false;
-var level = 2;
+var level = 0;
 var isLoaded = false;
 var seedNumber;
 var pattern = [2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2]; //1=vertical   2=L-shape 3=cross
@@ -137,6 +140,7 @@ function onMessageArrived(message) {
   let dataReceive = split(trim(message.payloadString), "/");
   if (dataReceive[1] == myName) {
     if (dataReceive[2] == "seed") {
+      p2Alpha=255
       seedNumber = parseInt(dataReceive[3]);
     } else if (dataReceive[2] == "pipe") {
       var x = parseInt(dataReceive[3]);
@@ -426,8 +430,10 @@ function mouseClicked() {
   mouse = true;
 }
 function keyPressed() {
-  // sendMQTTMessage('water')
-}
+  if (isloadingScreen) {
+    confirmAlpha=255;
+    sendMQTTMessage('ready')
+  }}
 function createPipe(xCor, yCor, n, l, pattern) {
   if (l === 1) {
     for (var ii = 0; ii < n; ii++) {
@@ -608,8 +614,33 @@ function failScreen(l){
   image(con1,1800,-400,4000,3000)
 }
 function loadingScreen(){
-  background(255)
-}
+  if(confirmAlpha===255&&p2Alpha===255){
+    loadingCounter++
+    if(loadingCounter>100){
+     loadingCounter=0
+     isGuessGame=true
+     isloadingScreen=false
+    }
+ }
+  push();
+  background(255);
+  fill(255);
+  rect(744, 650, 200, 50, 50);
+  fill(0);
+  text("Confirm", 655, 659);
+  text("Press space to confirm", 645, 559);
+  textSize(40);
+  pop();
+  push();
+  textSize(25);
+  fill(0);
+  text("player 1", 1014, 710);
+  text("player 2", 1214, 710);
+  fill(255,0,0,confirmAlpha)
+  ellipse(1044, 650, 50, 50);
+  fill(255,0,0,p2Alpha)
+  ellipse(1244, 650, 50, 50);
+  pop();}
 class pipeBlocks {
   constructor(x, y, pattern) {
     this.x = 0;

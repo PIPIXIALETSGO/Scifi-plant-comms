@@ -11,12 +11,13 @@ var randomAngle = [0, 90, 180, 270];
 var isPipeGame = false;
 var isGuessGame = true;
 var isFailed = false;
-var isloadingScreen = false;
+var isloadingScreen = true;
 var waterTime = false;
 var waterTimer = 0;
 var word;
 var letter;
 var spacing = 10;
+var loadingCounter=0
 ////////// guess game
 var backgroundImg,
   device,
@@ -80,6 +81,8 @@ var story = "haha";
 var isQuizGame = false;
 var selectedAnswer = 1;
 var quizNumber;
+var confirmAlpha = 0;
+var p2Alpha=0
 /////////////////////// MQTT////////
 let broker = {
   hostname: "public.cloud.shiftr.io",
@@ -165,6 +168,8 @@ function onMessageArrived(message) {
       level = 2;
     } else if (dataReceive[2] === "fail") {
       isFailed = true;
+    }else if (dataReceive[2] === "ready") {
+      p2Alpha = 255;
     }
   }
 }
@@ -419,6 +424,9 @@ function mouseClicked() {
 }
 function keyPressed() {
   sendMQTTMessage("seed", seedNumber, 1);
+  if (isloadingScreen) {
+    confirmAlpha=255;
+  }
 }
 function createPipe(xCor, yCor, n) {
   for (var ii = 0; ii < n; ii++) {
@@ -461,7 +469,33 @@ function failScreen(l) {
   image(con1, 1800, -300, 4000, 3000);
 }
 function loadingSreen() {
+  if(confirmAlpha===255&&p2Alpha===255){
+     loadingCounter++
+     if(loadingCounter>100){
+      loadingCounter=0
+      isloadingScreen=false
+     }
+  }
+  push();
   background(255);
+  fill(255);
+  rect(744, 650, 200, 50, 50);
+  fill(0);
+  text("Confirm", 655, 659);
+  text("Press space to confirm", 645, 559);
+  textSize(40);
+  fill(0);
+  pop();
+  push();
+  textSize(25);
+  text("player 1", 1014, 710);
+  text("player 2", 1214, 710);
+  fill(255,0,0,confirmAlpha)
+  ellipse(1044, 650, 50, 50);
+  
+  fill(255,0,0,p2Alpha)
+  ellipse(1244, 650, 50, 50);
+  pop();
 }
 class pipeBlocks {
   constructor(x, y) {

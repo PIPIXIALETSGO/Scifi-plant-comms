@@ -11,7 +11,7 @@ var randomAngle = [0, 90, 180, 270];
 var isPipeGame = false;
 var isGuessGame = false;
 var isloadingScreen = false;
-var isFailded = true;
+var isFailded = false;
 var waterTime = false;
 var isLoaded = false  ;
 var hint = false;
@@ -41,12 +41,15 @@ var img,
   root1,
   root2,
   root3,
+  root4,
   leaf1,
   leaf2,
   leaf3,
+  leaf4,
   con1,
   con2,
   con3,
+  alien,
   beep,
   waterSound,
   fontRegular;
@@ -121,9 +124,13 @@ function preload() {
   root1 = loadImage("./assets/images/root1.png");
   root2 = loadImage("./assets/images/root2.png");
   root3 = loadImage("./assets/images/root3.png");
+  root4 = loadImage("./assets/images/root4.png");
   leaf1 = loadImage("./assets/images/leaf1.png");
   leaf2 = loadImage("./assets/images/leaf2.png");
   leaf3 = loadImage("./assets/images/leaf3.png");
+  leaf4 = loadImage("./assets/images/leaf4.png");
+  alien = loadImage("./assets/images/alien.png");
+
   con1 = loadImage("./assets/images/con1.png");
   con2 = loadImage("./assets/images/con2.png");
   con3 = loadImage("./assets/images/con3.png");
@@ -727,6 +734,32 @@ function loadingScreen() {
  pop();
 }
 function ending(){
+  image(root1, 750, 360, 1700, 750);
+  image(root2, 750, 370, 1700, 750);
+  image(root3, 750, 380, 1700, 750);
+  image(root4,width/2,height/2,width,height)
+  image(leaf1, 700, 340, 2000, 1000);
+  image(leaf2, 750, 340, 2000, 1000);
+  image(leaf3, 950, 375, 1700, 750);
+  image(leaf4,width/2,height/2,width,height)
+  image(alien,-60,height/2,width,height)
+  push()
+  noStroke()
+  fill(141,134,184,150)
+  rect(width-500,height/2,600,200,10)
+  fill(255,0,0)
+  textSize(55)
+  textFont(fontRegular)
+  text("incoming message ",122,710)
+  textSize(25)
+
+  text("Your root-computer networks are ours! We are ",800,319)
+  text("converting your precious CO2 into deadly Oxigen.",800,349)
+  textSize(35)
+  
+  text("Prepare for planetary invasion.",819,399)
+  
+  pop()
 }
 class pipeBlocks {
   constructor(x, y, pattern) {

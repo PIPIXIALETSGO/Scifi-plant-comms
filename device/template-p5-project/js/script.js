@@ -4,14 +4,16 @@ var angle = 0;
 var pipes = [];
 var waterDrop = [];
 var numOfPipes = 11;
+var level = 3 ;
 var xCor = 500;
 var yCor = 250;
 var randomAngle = [0, 90, 180, 270];
-var isPipeGame = false;
-var isGuessGame = true;
+var isPipeGame = true;
+var isGuessGame = false;
 var isloadingScreen = false;
 var isFailded = false;
 var waterTime = false;
+var isLoaded = false  ;
 var hint = false;
 var rX = 0;
 var rY = 0;
@@ -21,6 +23,9 @@ var barAlpha = 0;
 var confirmAlpha = 0;
 var p2Alpha = 0;
 var loadingCounter = 0;
+var isEnded=false
+var mouse = false;
+
 ////////// guess game
 var img,
   img2,
@@ -41,6 +46,8 @@ var img,
   leaf2,
   leaf3,
   con1,
+  con2,
+  con3,
   beep,
   waterSound,
   fontRegular;
@@ -95,9 +102,6 @@ var winCon3 = [
   { position: 5, angle: 180, isMatched: 0 },
   { position: 6, angle: 90, isMatched: 0 },
 ];
-var mouse = false;
-var level = 0;
-var isLoaded = false;
 var seedNumber;
 var pattern = [2, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2];
 function preload() {
@@ -122,13 +126,14 @@ function preload() {
   leaf2 = loadImage("./assets/images/leaf2.png");
   leaf3 = loadImage("./assets/images/leaf3.png");
   con1 = loadImage("./assets/images/con1.png");
+  con2 = loadImage("./assets/images/con2.png");
+  con3 = loadImage("./assets/images/con3.png");
   beep = loadSound('assets/sounds/beep.mp3')
   waterSound=loadSound('assets/sounds/water.mp3')
 }
 function setup() {
   createCanvas(windowWidth, windowHeight);
   MQTTsetup();
-  background(0, 27);
   angleMode(DEGREES);
   imageMode(CENTER);
   rectMode(CENTER);
@@ -226,6 +231,7 @@ function draw() {
       checkWinCon();
       stroke(0);
       if (hint) {
+        console.log(1)
         hintAlpha -= 2;
         barAlpha += 1;
       }
@@ -259,6 +265,7 @@ function draw() {
     }
   }
   plantPhase(level);
+  ending()
   fill(0);
   textSize(25);
   text(mouseX + "," + mouseY, mouseX, mouseY);
@@ -321,7 +328,7 @@ function timer() {
   push();
   noStroke();
   fill(0);
-  fill(158, 37, 100);
+  fill(258, 37, 100);
   textSize(100);
   textFont(fontRegular);
   // text(8888, 900, 150);
@@ -338,7 +345,7 @@ function timer() {
     }
   }
   if (isPipeGame) {
-    text(stepCount, 400, 722);
+    text(stepCount, 250, 722);
     if (stepCount === 0) {
       sendMQTTMessage("fail");
       isFailded = true;
@@ -387,6 +394,7 @@ function middleButton() {
     if (d < 60 && mouse) {
       if (selectedImg === seedNumber) {
         sendMQTTMessage("guessComplete");
+        waterSound.play()
         waterTime = true;
       } else {
         beep.play()
@@ -399,7 +407,6 @@ function middleButton() {
 function leftButton() {
   if (isGuessGame) {
     var d = dist(mouseX, mouseY, 200, 580);
-
     if (d < 60 && mouse) {
       if (selectedImg < 0) {
         selectedImg = 0;
@@ -424,7 +431,6 @@ function displayWater() {
     }
     if (waterTimer < 400) {
       waterTimer++;
-      waterSound.play()
     } else {
       level++;
       isGuessGame = false;
@@ -443,6 +449,7 @@ function keyPressed() {
     confirmAlpha = 255;
     sendMQTTMessage("ready");
   }
+
 }
 function createPipe(xCor, yCor, n, l, pattern) {
   if (l === 1) {
@@ -494,7 +501,6 @@ function createPipe(xCor, yCor, n, l, pattern) {
 function reset() {
   mouse = false;
   isLoaded = false;
-  console.log(1)
   hint = false;
   isFailded = false;
   waterTimer = 0;
@@ -518,6 +524,7 @@ function checkWinCon() {
     if (total === 8) {
       win(1);
       waterTime = true;
+      waterSound.play()
       sendMQTTMessage("water");
       isLoaded = false;
     }
@@ -533,6 +540,7 @@ function checkWinCon() {
     if (total === 6) {
       waterTime = true;
       sendMQTTMessage("water");
+      waterSound.play()
       win(2);
     }
   } else if (level === 3) {
@@ -547,7 +555,9 @@ function checkWinCon() {
     if (total === 7) {
       waterTime = true;
       sendMQTTMessage("water");
+      waterSound.play()
       win(3);
+      ending()
     }
   }
 }
@@ -569,8 +579,9 @@ function pipeGame(l) {
       tint(255, hintAlpha);
       image(waterLogo, 180, 180, 100, 100);
       image(waterLogo, 580, 380, 100, 100);
-      fill(0, barAlpha);
+      fill(6, 56, 143, barAlpha);
       rect(225, 280, 10, 50, 100);
+      fill(5, 66, 28, barAlpha);
       rect(225, 380, 10, 50, 100);
     }
   } else if (l === 2) {
@@ -582,8 +593,9 @@ function pipeGame(l) {
       image(waterLogo, 480, 180, 100, 100);
       tint(255, hintAlpha);
       image(waterLogo, 180, 180, 100, 100);
-      fill(255, barAlpha);
+      fill(6, 56, 143, barAlpha);
       rect(480, 225, 50, 10);
+      fill(5, 66, 28, barAlpha);
       rect(224, 380, 10, 50);
     }
   } else if (l === 3) {
@@ -598,9 +610,10 @@ function pipeGame(l) {
       image(waterLogo, 580, 380, 100, 100);
       tint(255, 255);
       image(waterLogo, 580, 180, 100, 100);
-      fill(255, barAlpha);
-      rect(535, 180, 10, 50);
-      rect(180, 335, 50, 10);
+      fill(6, 56, 143, barAlpha);
+      rect(535, 180, 10, 50,50);
+      fill(5, 66, 28, barAlpha);
+      rect(180, 335, 50, 10,50);
     }
   }
   pop();
@@ -625,20 +638,21 @@ function plantPhase(l) {
 }
 function failScreen(l) {
   image(con1, 1800, -400, 4000, 3000);
+  image(con2, 1800, -400, 4000, 3000);
+  image(con3, 1800, -400, 4000, 3000);
   push();
-  fill(255);
-  textSize(100);
-  text("You failed !", 560, 361);
+  fill(247, 114, 154);
+  textSize(60);
+  text("Plant specimen has been contaminated!!", 260, 361);
   var d = dist(mouseX, mouseY, 748, 625);
   if (d < 50) {
     fill(255);
-   
       reset()
     }
   
-    noFill();
+    fill(255);
   
-  rect(748, 625, 150, 50);
+  rect(748, 625, 150, 50,50);
   fill(0);
   textSize(25);
   text("Retry", 711, 633);
@@ -655,6 +669,7 @@ function loadingScreen() {
   }
   push();
   background(255);
+  text('haaaaaaaaaaaaaaaaaaaa',width/4,height/4)
   fill(255);
   rect(744, 650, 200, 50, 50);
   fill(0);
@@ -672,6 +687,8 @@ function loadingScreen() {
   fill(255, 0, 0, p2Alpha);
   ellipse(1244, 650, 50, 50);
   pop();
+}
+function ending(){
 }
 class pipeBlocks {
   constructor(x, y, pattern) {

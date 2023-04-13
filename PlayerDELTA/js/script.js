@@ -9,15 +9,16 @@ var xCor = 500;
 var yCor = 250;
 var randomAngle = [0, 90, 180, 270];
 var isPipeGame = false;
-var isGuessGame = true;
+var isGuessGame = false;
 var isFailed = false;
-var isloadingScreen = false;
+var isloadingScreen = true;
 var waterTime = false;
 var waterTimer = 0;
 var word;
 var letter;
 var spacing = 10;
 var loadingCounter=0
+var isEnded=false;
 var music;
 ////////// guess game
 var backgroundImg,
@@ -28,7 +29,11 @@ var backgroundImg,
   fontRegular,
   hintb,
   guessBox,
-  seed;
+  seed,
+  alien,
+  leaf4,
+  root4;
+
 var leaf1, leaf2, leaf3, root1, root2, root3, con1, con2, con3;
 var countDown = 0;
 var selectedImg = 1;
@@ -137,9 +142,15 @@ function preload() {
   leaf1 = loadImage("./assets/images/leaf1.png");
   leaf2 = loadImage("./assets/images/leaf2.png");
   leaf3 = loadImage("./assets/images/leaf3.png");
+  leaf4 = loadImage("./assets/images/leaf4.png");
+
+  alien = loadImage("./assets/images/alien.png");
+
   root1 = loadImage("./assets/images/root1.png");
   root2 = loadImage("./assets/images/root2.png");
   root3 = loadImage("./assets/images/root3.png");
+  root4 = loadImage("./assets/images/root4.png");
+
   con1 = loadImage("./assets/images/con1.png");
   con2 = loadImage("./assets/images/con2.png");
   con3 = loadImage("./assets/images/con3.png");
@@ -167,7 +178,7 @@ function onMessageArrived(message) {
       waterTime = true;
     } else if (dataReceive[2] === "pipeComplete") {
       reset();
-      level = 2;
+      level +=1;
     } else if (dataReceive[2] === "fail") {
       isFailed = true;
     }else if (dataReceive[2] === "ready") {
@@ -294,8 +305,14 @@ function draw() {
       failScreen(1);
     }
     displayWater();
+    if(level===4){
+      isEnded=true
+    }
   }
-  
+  if (isEnded){
+    ending();
+  }
+
   fill(0);
   textSize(25);
   text(mouseX + "," + mouseY, mouseX, mouseY);
@@ -394,6 +411,7 @@ function hintButton() {
   if (dist(mouseX, mouseY, (width/2) + 162, 865) < 50 && mouse) {
     isQuizGame = true;
     isPipeGame = false;
+    waterTimer=0;
     mouse = false;
   }
   push();
@@ -432,6 +450,10 @@ function displayWater() {
         level = 1;
       } else if (level === 1) {
         level = 2;
+      } else if (level === 2) {
+        level = 3;
+      } else if (level === 3) {
+        level=4;
       }
       waterTime = false;
       waterTimer = 0;
@@ -490,7 +512,28 @@ function plantPhase(l) {
   }
 }
 function failScreen(l) {
-  image(con1, 1800, -300, 4000, 3000);
+  image(con1, 1800, -400, 4000, 3000);
+  image(con2, 1800, -400, 4000, 3000)
+  image(con3, 1800, -400, 4000, 3000);
+  push();
+  fill(247, 114, 154);
+  textSize(60);
+  text("Plant specimen has been contaminated!!", 260, 361);
+  var d = dist(mouseX, mouseY, 748, 625);
+  if (d < 50) {
+    fill(255);
+      isFailed=false;
+    
+    }
+  
+    fill(235, 64, 52);
+    noStroke()
+  rect(748, 625, 150, 50,50);
+  fill(0);
+  textSize(20);
+  text("Retry", 721, 633);
+  pop();
+
 }
 function loadingSreen() {
   if(confirmAlpha===255&&p2Alpha===255){
@@ -552,6 +595,38 @@ function loadingSreen() {
   ellipse(width/2 + 200, vert3rd * 2 + 20, 50, 50);
   pop();
 }
+
+function ending(){
+  isPipeGame=false;
+  image(root1, width/2,height/2,width,height);
+  image(root2, width/2,height/2,width,height);
+  image(root3, width/2,height/2,width,height);
+  image(root4,width/2,height/2,width,height)
+  image(leaf1, width/2,height/2,width,height);
+  image(leaf2, width/2,height/2,width,height);
+  image(leaf3, width/2,height/2,width,height);
+  image(leaf4,width/2,height/2,width,height)
+  image(alien,width/2,height/2,width,height)
+  push();
+  textAlign(CENTER);
+  noStroke();
+  fill(141,134,184,150);
+  rect(width/3,height/3,600,200,10);
+  fill(255,0,0);
+  textSize(55);
+  textFont(fontRegular);
+  text("incoming message ",(width/3) * 2 + 100 ,height - 80);
+
+  textSize(25);
+  text("Your root-computer networks are ours! We are ",width/3,319);
+  text("converting your precious CO2 into deadly Oxigen.",width/3,349);
+  textSize(35);
+  
+  text("Prepare for planetary invasion.",width/3,399);
+  
+  pop();
+}
+
 class pipeBlocks {
   constructor(x, y) {
     this.x = 0;

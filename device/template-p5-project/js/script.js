@@ -742,7 +742,7 @@ function ending(){
   image(leaf2, 750, 340, 2000, 1000);
   image(leaf3, 950, 375, 1700, 750);
   image(leaf4,width/2,height/2,width,height)
-  image(alien,-60,height/2,width,height)
+  image(alien,width/2,height/2,width,height)
   push()
   noStroke()
   fill(141,134,184,150)

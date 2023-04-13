@@ -4,11 +4,11 @@ var angle = 0;
 var pipes = [];
 var waterDrop = [];
 var numOfPipes = 11;
-var level = 3 ;
+var level = 0 ;
 var xCor = 500;
 var yCor = 250;
 var randomAngle = [0, 90, 180, 270];
-var isPipeGame = true;
+var isPipeGame = false;
 var isGuessGame = false;
 var isloadingScreen = false;
 var isFailded = false;
@@ -25,7 +25,6 @@ var p2Alpha = 0;
 var loadingCounter = 0;
 var isEnded=false
 var mouse = false;
-
 ////////// guess game
 var img,
   img2,
@@ -42,12 +41,15 @@ var img,
   root1,
   root2,
   root3,
+  root4,
   leaf1,
   leaf2,
   leaf3,
+  leaf4,
   con1,
   con2,
   con3,
+  alien,
   beep,
   waterSound,
   fontRegular;
@@ -122,14 +124,20 @@ function preload() {
   root1 = loadImage("./assets/images/root1.png");
   root2 = loadImage("./assets/images/root2.png");
   root3 = loadImage("./assets/images/root3.png");
+  root4 = loadImage("./assets/images/root4.png");
   leaf1 = loadImage("./assets/images/leaf1.png");
   leaf2 = loadImage("./assets/images/leaf2.png");
   leaf3 = loadImage("./assets/images/leaf3.png");
+  leaf4 = loadImage("./assets/images/leaf4.png");
+  alien = loadImage("./assets/images/alien.png");
+
   con1 = loadImage("./assets/images/con1.png");
   con2 = loadImage("./assets/images/con2.png");
   con3 = loadImage("./assets/images/con3.png");
   beep = loadSound('assets/sounds/beep.mp3')
   waterSound=loadSound('assets/sounds/water.mp3')
+  textFont(fontRegular);
+
 }
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -138,7 +146,6 @@ function setup() {
   imageMode(CENTER);
   rectMode(CENTER);
   beep.setVolume(1)
-  image(guessBox, 1261, 589, 100, 100);
   if (level === 0) {
     createPipe(280, 180, 11, 1, pattern);
   }
@@ -200,7 +207,7 @@ function draw() {
     image(backgroundImg, width/2, height/2, width, height);
     plantPhase(level);
     if (isGuessGame) {
-      image(guessBox, 1661, 410, 2000, 1000);
+      image(guessBox, 1521, 510, width, height);
     }
     interface();
     if (isPipeGame) {
@@ -238,7 +245,10 @@ function draw() {
     }
     if (isGuessGame) {
       push();
-      text("Which one is the right one?", 190, 135);
+      fill(0,200)
+      textSize(40)
+      textFont(fontRegular);
+      text("Which one is the right one?", 160, 135);
       image(img2, 240, 340, 600, 500);
       image(img, 60, 340, 600, 500);
       image(img3, 420, 340, 600, 500);
@@ -260,12 +270,13 @@ function draw() {
       pop();
     }
     displayWater();
-    if (isFailded) {
-      failScreen(1);
-    }
+    
   }
   plantPhase(level);
   ending()
+  if (isFailded) {
+    failScreen();
+  }
   fill(0);
   textSize(25);
   text(mouseX + "," + mouseY, mouseX, mouseY);
@@ -333,7 +344,8 @@ function timer() {
   textFont(fontRegular);
   // text(8888, 900, 150);
   if (isGuessGame) {
-    text(countDown, 250, 722);
+    text("Timer:   ", 50, 722);
+    text(countDown, 300, 722);
     if (frameCount % 60 == 0 && countDown > 0) {
       if (waterTime === false) {
         countDown--;
@@ -345,7 +357,8 @@ function timer() {
     }
   }
   if (isPipeGame) {
-    text(stepCount, 250, 722);
+    text("steps:", 50, 722);
+    text(stepCount, 350, 722);
     if (stepCount === 0) {
       sendMQTTMessage("fail");
       isFailded = true;
@@ -367,7 +380,6 @@ function interfaceAlpha() {
   }
 }
 function interface() {
-  image(box, 850, 370, 1300, 750);
   image(device, 653, 380, 1300, 750);
   interfaceAlpha();
   leftButton();
@@ -619,6 +631,7 @@ function pipeGame(l) {
   pop();
 }
 function plantPhase(l) {
+  
   if (l === 1) {
     image(leaf1, 700, 340, 2000, 1000);
     image(root1, 750, 360, 1700, 750);
@@ -635,10 +648,12 @@ function plantPhase(l) {
     image(root2, 750, 370, 1700, 750);
     image(root3, 750, 380, 1700, 750);
   }
+  image(box, 850, 370, 1300, 750);
+
 }
-function failScreen(l) {
+function failScreen() {
   image(con1, 1800, -400, 4000, 3000);
-  image(con2, 1800, -400, 4000, 3000);
+  image(con2, 1800, -400, 4000, 3000)
   image(con3, 1800, -400, 4000, 3000);
   push();
   fill(247, 114, 154);
@@ -650,45 +665,101 @@ function failScreen(l) {
       reset()
     }
   
-    fill(255);
-  
+    fill(235, 64, 52);
+    noStroke()
   rect(748, 625, 150, 50,50);
   fill(0);
-  textSize(25);
-  text("Retry", 711, 633);
+  textSize(20);
+  text("Retry", 721, 633);
   pop();
 }
 function loadingScreen() {
-  if (confirmAlpha === 255 && p2Alpha === 255) {
-    loadingCounter++;
-    if (loadingCounter > 100) {
-      loadingCounter = 0;
-      isGuessGame = true;
-      isloadingScreen = false;
+  if(confirmAlpha===255&&p2Alpha===255){
+    loadingCounter++
+    if(loadingCounter>100){
+     loadingCounter=0
+     isloadingScreen=false
+     isGuessGame=true
     }
-  }
-  push();
-  background(255);
-  text('haaaaaaaaaaaaaaaaaaaa',width/4,height/4)
-  fill(255);
-  rect(744, 650, 200, 50, 50);
-  fill(0);
-  text("Confirm", 695, 659);
-  text("Press space to confirm", 645, 559);
-  textSize(40);
-  pop();
-  push();
-  textSize(25);
-  fill(0);
-  text("player 1", 1014, 710);
-  text("player 2", 1214, 710);
-  fill(255, 0, 0, confirmAlpha);
-  ellipse(1044, 650, 50, 50);
-  fill(255, 0, 0, p2Alpha);
-  ellipse(1244, 650, 50, 50);
-  pop();
+ }
+
+ let vert3rd = height/3;  
+ push();
+ textAlign(CENTER);
+ textFont(fontRegular);
+ background(240,240,240);
+ fill(255);
+ rect(width/3, (vert3rd * 2) + 100, 200, 50, 50);
+ fill(0);
+ text("Confirm", width/3, vert3rd * 2 + 110);
+ text("Press space-bar to confirm", width/3, (vert3rd * 2) + 70);
+ textSize(40);
+ fill(0);
+ pop();
+
+ push();
+ textAlign(CENTER);
+ textFont(fontRegular);
+ textSize(60);
+ text("Program Code Name: **Alien Plant Comms**", width/2, vert3rd - 250);
+ textSize(50);
+ text("Brief:", width/2, vert3rd - 160);
+ 
+ textAlign(LEFT);
+ textWrap(WORD);
+ textSize(30);
+ text("Extraterrestrial alien lifeforms have been discovered in the topsoil. Our department has found a way to interface with these plant-like entities. We believe they may hold the key to offset CO2 levels in the atmosphere. Providing Oxygen at a rapid rate, and allowing us to return to the surface within the coming years.", width/2, vert3rd - 100, width - 500);
+;
+ text("We call upon the inhabitants of the Greenhouse underground to cooperate in pairs to upkeep the systems that allow us to grow our alien plant visitors and avoid contamination.", width/2, height/2 -60, width - 500);
+
+ textAlign(RIGHT);
+ text("Identify the alien seeds, test your knowledge of earth flora, repair irrigation pipelines, and **communicate everything you see onscreen to your teammate**", width/2-70, height/2 + 65, width - 500);
+
+ textAlign(CENTER)
+ text("Cooperation among all species is essential to our success.", width/2, (vert3rd * 2) + 200, width - 500);
+ pop();
+
+ push();
+ textAlign(CENTER);
+ textFont(fontRegular);
+ textSize(25);
+ text("player **GAMMA**", width/2, (vert3rd * 2) + 70);
+ text("player **DELTA** ", width/2 + 200, (vert3rd * 2) + 70);
+
+ fill(255,0,0,confirmAlpha)
+ ellipse(width/2, vert3rd * 2+100, 50, 50);
+ 
+ fill(255,0,0,p2Alpha)
+ ellipse(width/2 + 200, vert3rd * 2 + 100, 50, 50);
+ pop();
 }
 function ending(){
+  image(root1, 750, 360, 1700, 750);
+  image(root2, 750, 370, 1700, 750);
+  image(root3, 750, 380, 1700, 750);
+  image(root4,width/2,height/2,width,height)
+  image(leaf1, 700, 340, 2000, 1000);
+  image(leaf2, 750, 340, 2000, 1000);
+  image(leaf3, 950, 375, 1700, 750);
+  image(leaf4,width/2,height/2,width,height)
+  image(alien,-60,height/2,width,height)
+  push()
+  noStroke()
+  fill(141,134,184,150)
+  rect(width-500,height/2,600,200,10)
+  fill(255,0,0)
+  textSize(55)
+  textFont(fontRegular)
+  text("incoming message ",122,710)
+  textSize(25)
+
+  text("Your root-computer networks are ours! We are ",800,319)
+  text("converting your precious CO2 into deadly Oxigen.",800,349)
+  textSize(35)
+  
+  text("Prepare for planetary invasion.",819,399)
+  
+  pop()
 }
 class pipeBlocks {
   constructor(x, y, pattern) {

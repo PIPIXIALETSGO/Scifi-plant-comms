@@ -4,18 +4,18 @@ var angle = 0;
 var pipes = [];
 var waterDrop = [];
 var numOfPipes = 11;
-var level = 3;
+var level = 0;
 var xCor = 500;
 var yCor = 250;
 var randomAngle = [0, 90, 180, 270];
-var isPipeGame = true;
+var isPipeGame = false;
 var isGuessGame = false;
-var isloadingScreen = false;
+var isloadingScreen = true;
 var isFailded = false;
 var isEnded=false
 var waterTime = false;
 var isLoaded = false  ;
-var hint = true;
+var hint = false;
 var rX = 0;
 var rY = 0;
 const FRAME_RATE = 30;
@@ -281,7 +281,6 @@ function draw() {
   if (isFailded) {                                                       //show the failling screen when isFailed is true
     failScreen();
   }
-  win(3)
 }
 function win(l) {                                                       
   if (l === 1) {                                                       
@@ -691,6 +690,7 @@ function loadingScreen() {
  fill(255);
  rect(width/3, (vert3rd * 2) + 100, 200, 50, 50);
  fill(0);
+ textSize(25)
  text("Confirm", width/3, vert3rd * 2 + 110);
  text("Press space-bar to confirm", width/3, (vert3rd * 2) + 70);
  textSize(40);

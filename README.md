@@ -11,6 +11,8 @@ Player's screens have complementary information about the tasks at hand, and the
 
 ### Gameplay Screenshots:
 ![](./art-export/Gameplay_Screenshot01.png)
+![](./art-export/Gameplay_Screenshot11.png)
+![](./art-export/Gameplay_Screenshot10.gif)
 ![](./art-export/Gameplay_Screenshot02.png)
 ![](./art-export/Gameplay_Screenshot03.png)
 ![](./art-export/Gameplay_Screenshot04.png)
@@ -19,6 +21,8 @@ Player's screens have complementary information about the tasks at hand, and the
 ![](./art-export/Gameplay_Screenshot07.png)
 ![](./art-export/Gameplay_Screenshot08.png)
 ![](./art-export/Gameplay_Screenshot09.gif)
+
+
 ### How to play it:
 1. Run the script.js file in project folders 'PlayerGAMMA' and 'PlayerDELTA' on separate computers with an internet connection. Or alternatively run each program on the web at: (!).
 

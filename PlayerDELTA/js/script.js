@@ -20,7 +20,6 @@ var spacing = 10;
 var loadingCounter=0
 var isEnded=false;
 var music;
-////////// guess game
 var backgroundImg,
   device,
   leftb,
@@ -33,14 +32,12 @@ var backgroundImg,
   alien,
   leaf4,
   root4;
-
 var leaf1, leaf2, leaf3, root1, root2, root3, con1, con2, con3;
 var countDown = 0;
 var selectedImg = 1;
 var buttonAlpha = 255;
 var targetSeed;
 var stepsCount = 10;
-///////////////////Quiz///////////
 var quiz = [
   {
     question: "Which of these is a flowering plant?",
@@ -82,14 +79,14 @@ var quiz = [
     answer4: "Sepels",
     correct: 3,
   },
-];
+];// A collection that contains all title and answers of the quiz game
 var story = "haha";
 var isQuizGame = false;
 var selectedAnswer = 1;
 var quizNumber;
 var confirmAlpha = 0;
 var p2Alpha=0
-/////////////////////// MQTT////////
+/////////////////////// MQTT variables////////
 let broker = {
   hostname: "public.cloud.shiftr.io",
   port: 443,
@@ -103,26 +100,6 @@ let creds = {
 let topic = "CART253";
 let myName = "kk";
 let nextName = "jw";
-////////////////////////////////
-var winCon1 = [
-  { position: 1, angle: 180, isMatched: 0 },
-  { position: 2, angle: 0, isMatched: 0 },
-  { position: 3, angle: 90, isMatched: 0 },
-];
-var winCon2 = [
-  { position: 2, angle: 180, isMatched: 0 },
-  { position: 3, angle: 90, isMatched: 0 },
-  { position: 4, angle: 0, isMatched: 0 },
-];
-var winCon3 = [
-  { position: 1, angle: 270, isMatched: 0 },
-  { position: 2, angle: 0, isMatched: 0 },
-  { position: 3, angle: 270, isMatched: 0 },
-  { position: 4, angle: 270, isMatched: 0 },
-  { position: 5, angle: 90, isMatched: 0 },
-  { position: 6, angle: 180, isMatched: 0 },
-  { position: 7, angle: 90, isMatched: 0 },
-];
 var mouse = false;
 var hint = false;
 var seedNumber;
@@ -143,19 +120,16 @@ function preload() {
   leaf2 = loadImage("./assets/images/leaf2.png");
   leaf3 = loadImage("./assets/images/leaf3.png");
   leaf4 = loadImage("./assets/images/leaf4.png");
-
   alien = loadImage("./assets/images/alien.png");
-
   root1 = loadImage("./assets/images/root1.png");
   root2 = loadImage("./assets/images/root2.png");
   root3 = loadImage("./assets/images/root3.png");
   root4 = loadImage("./assets/images/root4.png");
-
   con1 = loadImage("./assets/images/con1.png");
   con2 = loadImage("./assets/images/con2.png");
   con3 = loadImage("./assets/images/con3.png");
-  quizNumber = Math.round(random(0, 4));
-}
+  quizNumber = Math.round(random(0, 4));                                 // randomize a number between 0 to 4 to pick one from the quiz collections
+}                                                                        // preload all the images and audios before the lauching the website
 function setup() {
   createCanvas(windowWidth, windowHeight);
   MQTTsetup();
@@ -165,7 +139,7 @@ function setup() {
   angleMode(DEGREES);
   imageMode(CENTER);
   rectMode(CENTER);
-  for (var ii = 0; ii < numofDrops; ii++) {
+  for (var ii = 0; ii < numofDrops; ii++) {                             //initialize the water drops
     waterDrop[ii] = new water();
   }
 }
@@ -185,23 +159,23 @@ function onMessageArrived(message) {
       p2Alpha = 255;
     }
   }
-}
+}                                                                       // function will excute when my name is received 
 function sendMQTTMessage(g, x, y) {
   message = new Paho.MQTT.Message(
     myName + "/" + nextName + "/" + g + "/" + x + "/" + y
   );
   message.destinationName = topic;
   client.send(message);
-}
+}                                                                       // A function that sends message to another device
 function onConnect() {
   client.subscribe(topic);
   console.log("connected");
-}
+}                                                                       //diplay connected when MQTT is connected
 function onConnectionLost(response) {
   if (response.errorCode !== 0) {
     console.log("error");
   }
-}
+}                                                                       //display an error message when something goes wrong during the connection
 function MQTTsetup() {
   client = new Paho.MQTT.Client(
     broker.hostname,
@@ -216,22 +190,22 @@ function MQTTsetup() {
     password: creds.password, // password
     useSSL: true,
   });
-}
+}                                                                       // initialization of MQTT
 function draw() {
-  if (isloadingScreen) {
+  if (isloadingScreen) {                                                //display the loading page when the boolean(isloadingScreen) is true  
     loadingSreen();
   } else {
-    interface();
+    interface();                                                        //draw background image
     if (isGuessGame) {
-      image(guessBox, width/2 , height/2, width, height);
+      image(guessBox, width/2 , height/2, width, height);               //display the quesiton box if guess game starts
       push()
       textSize(30);
       textFont(fontRegular);
       text("Describe the seed displayed on the terminal.", ((width/3) * 2) - 160, 1000);
       pop();
-      image(seed, width/2 , height/2, width, height);
+      image(seed, width/2 , height/2, width, height);                   //display a seed in the middle of the console
     }
-    if (isPipeGame) {
+    if (isPipeGame) {                                                   //when pipe game is enabled, show all the following shapes and texts
       push();
       stroke(141, 134, 184);
       strokeWeight(20);
@@ -246,7 +220,7 @@ function draw() {
       text("Click on valves to rotate pipeline sections.", ((width/3) * 2) - 180, 655);
       text("Press the '?' button to attempt to eliminate", ((width/3) * 2) - 180, 975);
       text("false resource location signals.", ((width/3) * 2) - 170, 1010);
-      if (isLoaded === false) {
+      if (isLoaded === false) {                                                    //initilize all the wheels on the pipeline
         numOfPipes = 15;
         createPipe(1203, 180, numOfPipes);
         isLoaded = true;
@@ -254,10 +228,9 @@ function draw() {
       displayPipe(numOfPipes);
       stroke(0);
     }
-    if (isQuizGame) {
+    if (isQuizGame) {                                                            //display the 4 answers and a red border around it when it's been seletcted during the quiz
       let xPos = 1225; 
       push();
-      
       fill(141, 134, 184);
       noStroke();
       stroke(0);
@@ -300,24 +273,19 @@ function draw() {
       pop();
       quizBlock();
     }
-    plantViz(); // Plant visualization.
-    if (isFailed) {
+    plantViz();                                                                   // Plant visualization.
+    if (isFailed) {                                                               //show the failling screen when isFailed is true
       failScreen(1);
     }
     displayWater();
-    if(level===4){
+    if(level===4){                                                                //The boolean isEnded become true when it reaches level 4                                                   
       isEnded=true
     }
   }
-  if (isEnded){
+  if (isEnded){                                                                    //show the ending screen when isEnded is true
     ending();
   }
-
-  fill(0);
-  textSize(25);
-  text(mouseX + "," + mouseY, mouseX, mouseY);
 }
-
 function timer() {
   push();
   noStroke();
@@ -331,8 +299,7 @@ function timer() {
     text(stepsCount, 1100, 722);
   }
   pop();
-}
-
+}                                                                       //A function that display a timer at the bottom of screen when it's been called. And based on the game, it will choose to be a countdown or stepcounts
 function interface() {
   image(backgroundImg, width/2, height/2, width, height);
   image(device, width/2 , height/2, width, height);
@@ -340,13 +307,11 @@ function interface() {
   leftButton();
   middleButton();
   rightButton();
-}
-
+}                                                                       //A function that contains all elements of the console
 function plantViz() {
   plantPhase(level);
   image(box, width/2 , height/2, width, height);
-}
-
+}                                                                       //It will put the plants behind the box
 function quizBlock() {
   let xPos = 1176; 
   push();
@@ -358,7 +323,7 @@ function quizBlock() {
   text(quiz[quizNumber].answer3, xPos + 300, 360);
   text(quiz[quizNumber].answer4, xPos + 450, 360);
   pop();
-}
+}                                                                       //A function to that displays all quiz elements
 function leftButton() {
   if (isQuizGame) {
     var d = dist(mouseX, mouseY, 1291, 831);
@@ -372,7 +337,7 @@ function leftButton() {
     }
   }
   image(leftb, width/2 , height/2, width, height);
-}
+}                                                                       //display the right arrow button, and change seleted answer to the one on the right hand side
 function middleButton() {
   if (isQuizGame) {
     var d = dist(mouseX, mouseY, 1450, 817);
@@ -392,7 +357,7 @@ function middleButton() {
     }
   }
   image(middleb, width/2 , height/2, width, height);
-}
+}                                                                       //display the check mark  button, when it's been pressed. Check the answer and will send a message to another device if the puzzle is solved
 function rightButton() {
   if (isQuizGame) {
     var d = dist(mouseX, mouseY, 1610, 817);
@@ -406,7 +371,7 @@ function rightButton() {
     }
   }
   image(rightb,width/2 , height/2, width, height);
-}
+}                                                                       //display the left arrow button, and change seleted answer to the one on the left hand side
 function hintButton() {
   if (dist(mouseX, mouseY, (width/2) + 162, 865) < 50 && mouse) {
     isQuizGame = true;
@@ -427,20 +392,20 @@ function hintButton() {
     text("?", (width/2) + 162, 865);
     pop();
   }
-}
+}                                                                        //display the hint button, it will turn off the pipe screen when hint is true
 function displayPipe(numOfPipes) {
   for (var ii = 0; ii < numOfPipes; ii++) {
     pipes[ii].display();
     pipes[ii].rotation();
   }
-}
+}                                                                       //A function loops all the methods in particle class
 function displayWater() {
-  if (waterTime) {
+  if (waterTime) {                                                      //when watertime is true, display the water drop particles
     for (var ii = numofDrops - 1; ii >= 0; ii--) {
       waterDrop[ii].update();
       waterDrop[ii].show();
     }
-    if (waterTimer < 300) {
+    if (waterTimer < 300) {                                              //a timer to track how long you want the drops last 
       waterTimer++;
     } else {
       hint = false;
@@ -448,7 +413,7 @@ function displayWater() {
         isGuessGame = false;
         isPipeGame = true;
         level = 1;
-      } else if (level === 1) {
+      } else if (level === 1) {                                         //adding 1 to the current level when watering phase is done
         level = 2;
       } else if (level === 2) {
         level = 3;
@@ -462,7 +427,7 @@ function displayWater() {
 }
 function mouseClicked() {
   mouse = true;
-}
+}                                                                     //a boolean called mouse will be true when mouse is clicked
 function keyPressed() {
   sendMQTTMessage("seed", seedNumber, 1);
   //Play music if it's not playing:
@@ -473,7 +438,7 @@ function keyPressed() {
 
     confirmAlpha=255;
   }
-}
+}                                                                   // send a signal to another device when key is pressed during the loading  screen   
 function createPipe(xCor, yCor, n) {
   for (var ii = 0; ii < n; ii++) {
     if (ii === 5) {
@@ -486,13 +451,13 @@ function createPipe(xCor, yCor, n) {
     pipes[ii] = new pipeBlocks(xCor, yCor);
     xCor += 100;
   }
-}
+}                                                                   //change the x and y offset based on the level and initialize pipe particles
 function reset() {
   mouse = false;
   isLoaded = false;
   waterTimer = 0;
   pipes = [];
-}
+}                                                                   //a function to reset some variables when its needed
 function plantPhase(l) {
   if (l === 1) {
     image(leaf1, width/2 , height/2, width, height);
@@ -510,7 +475,7 @@ function plantPhase(l) {
     image(root2, width/2 , height/2, width, height);
     image(root3, width/2 , height/2, width, height);
   }
-}
+}                                                                   //display the plants next the console based on which level it is right now
 function failScreen(l) {
   image(con1, 1800, -400, 4000, 3000);
   image(con2, 1800, -400, 4000, 3000)
@@ -534,7 +499,7 @@ function failScreen(l) {
   text("Retry", 721, 633);
   pop();
 
-}
+}                                                                   //A retry button and failling screen will be displayed when the players fail to complete their task
 function loadingSreen() {
   if(confirmAlpha===255&&p2Alpha===255){
      loadingCounter++
@@ -594,8 +559,7 @@ function loadingSreen() {
   fill(255,0,0,p2Alpha)
   ellipse(width/2 + 200, vert3rd * 2 + 20, 50, 50);
   pop();
-}
-
+}                                                                   //When both player pressed a key on their screen in loading phase, it will start the actual game
 function ending(){
   isPipeGame=false;
   image(root1, width/2,height/2,width,height);
@@ -625,10 +589,9 @@ function ending(){
   text("Prepare for planetary invasion.",width/3,399);
   
   pop();
-}
-
+}                                                                   //Display the endings when players have completed all 3 levels
 class pipeBlocks {
-  constructor(x, y) {
+  constructor(x, y) {                                               //initilize coordinates and angle of each pipe
     this.x = 0;
     this.y = 0;
     this.toX = x;
@@ -637,7 +600,7 @@ class pipeBlocks {
     this.rotate = false;
     this.target = this.angle + 90;
   }
-  rotation() {
+  rotation() {                                                      //rotate the pipe 90 degrees and stop
     push();
     if (mouseX < this.toX + 50 && mouseX > this.toX - 50) {
       if (mouseY < this.toY + 50 && mouseY > this.toY - 50) {
@@ -690,14 +653,14 @@ class pipeBlocks {
   }
 }
 class water {
-  constructor() {
+  constructor() {                                                  //initilize coordinates and acceleration of each pipe
     this.x = random(464, 600);
     this.y = 62;
     this.yVelocity = random(1, 5);
     this.alpha = 255;
     this.acc = 0.05;
   }
-  update() {
+  update() {                                                        //add acceleration to velocity and when y coordinate is below 1050, reset its position
     this.yVelocity += this.acc;
     this.y += this.yVelocity;
     this.alpha -= 1.3;
@@ -706,7 +669,7 @@ class water {
       this.yVelocity = random(1, 5);
     }
   }
-  show() {
+  show() {                                                          //all water drop is in a shape of line
     var wgt = map(this.yVelocity, 1, 10, 0.5, 2);
     push();
     strokeWeight(wgt);
@@ -715,4 +678,3 @@ class water {
     pop();
   }
 }
-///missing the forth stage for plants

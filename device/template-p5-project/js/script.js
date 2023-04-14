@@ -10,8 +10,9 @@ var yCor = 250;
 var randomAngle = [0, 90, 180, 270];
 var isPipeGame = false;
 var isGuessGame = false;
-var isloadingScreen = false;
+var isloadingScreen = true;
 var isFailded = false;
+var isEnded=false
 var waterTime = false;
 var isLoaded = false  ;
 var hint = false;
@@ -23,7 +24,6 @@ var barAlpha = 0;
 var confirmAlpha = 0;
 var p2Alpha = 0;
 var loadingCounter = 0;
-var isEnded=false
 var mouse = false;
 ////////// guess game
 var img,
@@ -53,7 +53,7 @@ var img,
   beep,
   waterSound,
   fontRegular;
-var countDown = 30;
+var countDown = 20; 
 var stepCount = 20;
 var selectedImg = 0;
 var buttonAlpha = 100;
@@ -136,7 +136,7 @@ function preload() {
   con3 = loadImage("./assets/images/con3.png");
   beep = loadSound('assets/sounds/beep.mp3')
   waterSound=loadSound('assets/sounds/water.mp3')
-  textFont(fontRegular);
+  // textFont(fontRegular);
 
 }
 function setup() {
@@ -164,7 +164,6 @@ function onMessageArrived(message) {
       var y = parseInt(dataReceive[4]);
       rX = x;
       rY = y;
-      console.log(rX,rY)
       stepCount--;
     } else if (dataReceive[2] === "hintComplete") {
       hint = true;
@@ -201,6 +200,7 @@ function MQTTsetup() {
   });
 }
 function draw() {
+
   if (isloadingScreen) {
     loadingScreen();
   } else {
@@ -213,7 +213,17 @@ function draw() {
     if (isPipeGame) {
       isGuessGame = false;
       pipeGame(level);
-      if (level === 2 && isLoaded === false) {
+      if (level === 1 && isLoaded === false) {
+        numOfPipes = 12;
+        createPipe(
+          280,
+          180,
+          numOfPipes,
+          1,
+          pattern
+        );
+        isLoaded = true;
+      }else if (level === 2 && isLoaded === false) {
         numOfPipes = 12;
         createPipe(
           280,
@@ -238,7 +248,6 @@ function draw() {
       checkWinCon();
       stroke(0);
       if (hint) {
-        console.log(1)
         hintAlpha -= 2;
         barAlpha += 1;
       }
@@ -273,10 +282,13 @@ function draw() {
     
   }
   plantPhase(level);
-  ending()
+  if(isEnded===true){
+    ending()
+  }
   if (isFailded) {
     failScreen();
   }
+  console.log(level)
   fill(0);
   textSize(25);
   text(mouseX + "," + mouseY, mouseX, mouseY);
@@ -443,18 +455,28 @@ function displayWater() {
     }
     if (waterTimer < 400) {
       waterTimer++;
+
     } else {
-      level++;
-      isGuessGame = false;
-      isPipeGame = true;
-      waterTime = false;
-      isLoaded = false;
-      waterTimer = 0;
+      if(level===3){
+        isGuessGame = false;
+        waterTime = false;
+        isLoaded = false;
+        waterTimer = 0;
+        isEnded=true
+      }
+        level++;
+        isGuessGame = false;
+        isPipeGame = true;
+        waterTime = false;
+        isLoaded = false;
+        waterTimer = 0;
+      
     }
   }
 }
 function mouseClicked() {
   mouse = true;
+  
 }
 function keyPressed() {
   if (isloadingScreen) {
@@ -465,6 +487,7 @@ function keyPressed() {
 }
 function createPipe(xCor, yCor, n, l, pattern) {
   if (l === 1) {
+    waterTimer=0
     for (var ii = 0; ii < n; ii++) {
       if (ii === 4) {
         xCor = 280;
@@ -511,11 +534,13 @@ function createPipe(xCor, yCor, n, l, pattern) {
   }
 }
 function reset() {
+  if (level === 0) {
+    createPipe(280, 180, 11, 1, pattern);
+  }
   mouse = false;
   isLoaded = false;
   hint = false;
   isFailded = false;
-  waterTimer = 0;
   hintAlpha = 255;
   stepCount = 20;
   countDown=30
@@ -538,7 +563,7 @@ function checkWinCon() {
       waterTime = true;
       waterSound.play()
       sendMQTTMessage("water");
-      isLoaded = false;
+      // isLoaded = false;
     }
   } else if (level === 2) {
     for (var jj = 0; jj < winCon2.length; jj++) {
@@ -569,7 +594,7 @@ function checkWinCon() {
       sendMQTTMessage("water");
       waterSound.play()
       win(3);
-      ending()
+      
     }
   }
 }
@@ -623,7 +648,7 @@ function pipeGame(l) {
       tint(255, 255);
       image(waterLogo, 580, 180, 100, 100);
       fill(6, 56, 143, barAlpha);
-      rect(535, 180, 10, 50,50);
+      rect(535, 180, 10,50,50);
       fill(5, 66, 28, barAlpha);
       rect(180, 335, 50, 10,50);
     }
@@ -648,7 +673,9 @@ function plantPhase(l) {
     image(root2, 750, 370, 1700, 750);
     image(root3, 750, 380, 1700, 750);
   }
-  image(box, 850, 370, 1300, 750);
+  if(isGuessGame||isPipeGame){
+    image(box, 850, 370, 1300, 750);
+  }
 
 }
 function failScreen() {
@@ -661,10 +688,8 @@ function failScreen() {
   text("Plant specimen has been contaminated!!", 260, 361);
   var d = dist(mouseX, mouseY, 748, 625);
   if (d < 50) {
-    fill(255);
-      reset()
-    }
-  
+       reset()
+  }
     fill(235, 64, 52);
     noStroke()
   rect(748, 625, 150, 50,50);
@@ -734,6 +759,7 @@ function loadingScreen() {
  pop();
 }
 function ending(){
+  isPipeGame=false
   image(root1, 750, 360, 1700, 750);
   image(root2, 750, 370, 1700, 750);
   image(root3, 750, 380, 1700, 750);

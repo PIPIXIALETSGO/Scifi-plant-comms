@@ -17,7 +17,8 @@ Player's screens have complementary information about the tasks at hand, and the
 ![](./art-export/Gameplay_Screenshot05.png)
 ![](./art-export/Gameplay_Screenshot06.png)
 ![](./art-export/Gameplay_Screenshot07.png)
-
+![](./art-export/Gameplay_Screenshot08.png)
+![](./art-export/Gameplay_Screenshot09.gif)
 ### How to play it:
 1. Run the script.js file in project folders 'PlayerGAMMA' and 'PlayerDELTA' on separate computers with an internet connection. Or alternatively run each program on the web at: (!).
 

@@ -9,8 +9,8 @@ var xCor = 500;
 var yCor = 250;
 var randomAngle = [0, 90, 180, 270];
 var isPipeGame = false;
-var isGuessGame = false;
-var isFailed = false;
+var isGuessGame = false; 
+var isFailed = false; 
 var isloadingScreen = true;
 var waterTime = false;
 var waterTimer = 0;
@@ -126,7 +126,7 @@ var winCon3 = [
 var mouse = false;
 var hint = false;
 var seedNumber;
-var level = 0;
+var level = 3;
 var isLoaded = false;
 function preload() {
   music = loadSound('./assets/music/Plantasia.mp3'); // Music!

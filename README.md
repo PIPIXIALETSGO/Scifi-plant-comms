@@ -1,4 +1,5 @@
 ## Alien Plant Comms 
+[Link to  this repo.](https://github.com/PIPIXIALETSGO/Scifi-plant-comms)
 ### John Wu & Leo Morales - Computation Arts, Concordia University. April 13, 2023
 
 ![](./art-export/plantComms__All.png)
